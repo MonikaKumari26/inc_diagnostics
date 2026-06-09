@@ -45,6 +45,7 @@ test_suite(
     name = "unit_tests",
     tests = [
         "//score/mw/diag/uds:unit_tests",
+        "//score/mw/diag/dtc:unit_tests",
     ],
     visibility = ["//score/mw:__pkg__"],
 )
