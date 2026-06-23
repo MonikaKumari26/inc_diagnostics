@@ -137,7 +137,7 @@ class DtcMonitor
     DtcMonitor(DtcMonitor&&) noexcept        = delete;
     DtcMonitor& operator=(const DtcMonitor&)  & = delete;
     DtcMonitor& operator=(DtcMonitor&&) &    noexcept = delete;
-    virtual ~DtcMonitor() noexcept = default;
+    virtual ~DtcMonitor() noexcept;
 };
 
 /************************************/
@@ -166,7 +166,7 @@ class DtcStorageGuard
     DtcStorageGuard(DtcStorageGuard&&) noexcept          = delete;
     DtcStorageGuard& operator=(const DtcStorageGuard&)  & = delete;
     DtcStorageGuard& operator=(DtcStorageGuard&&) &      noexcept = delete;
-    virtual ~DtcStorageGuard() noexcept = default;
+    virtual ~DtcStorageGuard() noexcept;
 };
 
 }  // namespace diag

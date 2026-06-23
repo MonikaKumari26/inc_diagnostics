@@ -249,7 +249,7 @@ class ExecutionControl
     ExecutionControl(ExecutionControl&&) noexcept = delete;
     ExecutionControl& operator=(const ExecutionControl&) & = delete;
     ExecutionControl& operator=(ExecutionControl&&) & noexcept = delete;
-    virtual ~ExecutionControl() noexcept = default;
+    virtual ~ExecutionControl() noexcept;
 };
 
 /************************************/
@@ -327,7 +327,7 @@ class Operation
     Operation(Operation&&) noexcept = delete;
     Operation& operator=(const Operation&) & = delete;
     Operation& operator=(Operation&&) & noexcept = delete;
-    virtual ~Operation() noexcept = default;
+    virtual ~Operation() noexcept;
 };
 
 }  // namespace diag

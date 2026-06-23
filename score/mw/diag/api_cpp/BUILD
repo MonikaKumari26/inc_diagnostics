@@ -46,6 +46,7 @@ cc_library(
 cc_library(
     name = "uds",
     hdrs = ["uds.h"],
+    srcs = ["uds.cpp"],
     include_prefix = "score/mw/diag",
     visibility = _VISIBILITY,
     deps = [
@@ -57,6 +58,7 @@ cc_library(
 cc_library(
     name = "dtc",
     hdrs = ["dtc.h"],
+    srcs = ["dtc.cpp"],
     include_prefix = "score/mw/diag",
     visibility = _VISIBILITY,
     deps = [
@@ -67,6 +69,7 @@ cc_library(
 cc_library(
     name = "data_resource",
     hdrs = ["data_resource.h"],
+    srcs = ["data_resource.cpp"],
     include_prefix = "score/mw/diag",
     visibility = _VISIBILITY,
     deps = [
@@ -78,6 +81,7 @@ cc_library(
 cc_library(
     name = "operation",
     hdrs = ["operation.h"],
+    srcs = ["operation.cpp"],
     include_prefix = "score/mw/diag",
     visibility = _VISIBILITY,
     deps = [
@@ -158,6 +162,7 @@ cc_library(
 cc_library(
     name = "simple_operation",
     hdrs = ["simple_operation.h"],
+    srcs = ["simple_operation.cpp"],
     include_prefix = "score/mw/diag",
     visibility = _VISIBILITY,
     deps = [
@@ -180,6 +185,7 @@ cc_library(
 cc_library(
     name = "uds_adapters",
     hdrs = ["uds_adapters.h"],
+    srcs = ["uds_adapters.cpp"],
     include_prefix = "score/mw/diag",
     visibility = _VISIBILITY,
     deps = [
@@ -239,6 +245,28 @@ cc_test(
     tags = ["unit"],
     deps = [
         ":operation_mock",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "simple_operation_test",
+    srcs = ["simple_operation_test.cpp"],
+    tags = ["unit"],
+    deps = [
+        ":operation_mock",
+        ":simple_operation_mock",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "uds_adapters_test",
+    srcs = ["uds_adapters_test.cpp"],
+    tags = ["unit"],
+    deps = [
+        ":uds_adapters",
+        ":uds_mock",
         "@googletest//:gtest_main",
     ],
 )

@@ -234,7 +234,7 @@ class DataResource
     DataResource(DataResource&&) noexcept = delete;
     DataResource& operator=(const DataResource&) & = delete;
     DataResource& operator=(DataResource&&) & noexcept = delete;
-    virtual ~DataResource() noexcept = default;
+    virtual ~DataResource() noexcept;
 };
 
 }  // namespace diag

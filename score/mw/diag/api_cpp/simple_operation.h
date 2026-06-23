@@ -77,7 +77,7 @@ class SimpleOperation
     SimpleOperation(SimpleOperation&&) noexcept        = delete;
     SimpleOperation& operator=(const SimpleOperation&)  & = delete;
     SimpleOperation& operator=(SimpleOperation&&) &     noexcept = delete;
-    virtual ~SimpleOperation() noexcept                = default;
+    virtual ~SimpleOperation() noexcept;
 };
 
 /************************************/
@@ -116,93 +116,7 @@ class SimpleOperationAdapter final : public Operation
     ///
     /// @note Both the @p control reference AND this adapter instance MUST remain valid
     ///       until the returned ExecutionHandle::future has been invoked.
-    [[nodiscard]] Result<ExecutionHandle> execute(ExecuteArguments input, ExecutionControl& control) override
-    {
-        if (active_exec_id_.has_value())
-        {
-            return Result<ExecutionHandle>{
-                score::unexpect,
-                Error::from_error(sovd::GenericError::from_code(
-                    sovd::ErrorCode::PreconditionNotFulfilled,
-                    "operation is already executing"))};
-        }
-
-        auto start_result = wrapped_operation_->start(std::move(input));
-        if (!start_result.has_value())
-        {
-            return Result<ExecutionHandle>{score::unexpect, start_result.error()};
-        }
-
-        active_exec_id_ = control.exec_id();
-        ExecutionHandle outer_handle{};
-        ExecutionHandle inner_handle = std::move(start_result.value());
-
-        outer_handle.future = [this, inner_handle = std::move(inner_handle),
-                                &control]() mutable -> ExecutionResult
-        {
-            std::vector<Error> accumulated_errors;
-
-            while (true)
-            {
-                ExecutionEvent event = control.next_exec_event();
-
-                if (event.kind == ExecutionEventKind::ControlGone)
-                {
-                    if (!accumulated_errors.empty())
-                    {
-                        event.status_reporter.put(
-                            ExecutionStatus::Failed,
-                            ExecutionStatusDetails{}
-                                .with_exec_errors(std::move(accumulated_errors)));
-                    }
-                    active_exec_id_ = std::nullopt;
-                    return inner_handle.future();
-                }
-
-                if (event.kind == ExecutionEventKind::Stop)
-                {
-                    auto stop_result = wrapped_operation_->stop(std::move(event.args));
-                    event.status_reporter.put(ExecutionStatus::Stopped, ExecutionStatusDetails{});
-                    active_exec_id_ = std::nullopt;
-                    (void)stop_result;
-                    return Result<DiagnosticReply>{
-                        score::unexpect,
-                        Error::from_error(sovd::GenericError::from_code(
-                            sovd::ErrorCode::ErrorResponse, "operation stopped"))};
-                }
-
-                if (event.kind == ExecutionEventKind::ReportStatus)
-                {
-                    auto pct = wrapped_operation_->completion_percentage();
-                    ExecutionStatusDetails details{};
-                    if (pct.has_value())
-                    {
-                        details = std::move(details).with_completion_percentage(*pct);
-                    }
-                    event.status_reporter.put(ExecutionStatus::Running, std::move(details));
-                    continue;
-                }
-
-                if (event.kind == ExecutionEventKind::Error)
-                {
-                    if (event.error_payload.has_value())
-                    {
-                        accumulated_errors.push_back(std::move(*event.error_payload));
-                    }
-                    continue;
-                }
-
-                // All other kinds → UnsupportedCapability
-                ExecutionStatusDetails unsupported{};
-                unsupported.last_executed_capability =
-                    event.capability_name.value_or(std::string{to_string(event.kind)});
-                event.status_reporter.put(ExecutionStatus::UnsupportedCapability,
-                                          std::move(unsupported));
-            }
-        };
-
-        return outer_handle;
-    }
+    [[nodiscard]] Result<ExecutionHandle> execute(ExecuteArguments input, ExecutionControl& control) override;
 
     SimpleOperationAdapter(const SimpleOperationAdapter&)           = delete;
     SimpleOperationAdapter(SimpleOperationAdapter&&) noexcept       = delete;

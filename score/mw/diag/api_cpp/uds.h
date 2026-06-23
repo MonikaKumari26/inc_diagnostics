@@ -73,7 +73,7 @@ class ReadDataByIdentifier
     ReadDataByIdentifier(ReadDataByIdentifier&&) noexcept = delete;
     ReadDataByIdentifier& operator=(const ReadDataByIdentifier&) & = delete;
     ReadDataByIdentifier& operator=(ReadDataByIdentifier&&) & noexcept = delete;
-    virtual ~ReadDataByIdentifier() noexcept = default;
+    virtual ~ReadDataByIdentifier() noexcept;
 };
 
 /************************************/
@@ -93,7 +93,7 @@ class WriteDataByIdentifier
     WriteDataByIdentifier(WriteDataByIdentifier&&) noexcept = delete;
     WriteDataByIdentifier& operator=(const WriteDataByIdentifier&) & = delete;
     WriteDataByIdentifier& operator=(WriteDataByIdentifier&&) & noexcept = delete;
-    virtual ~WriteDataByIdentifier() noexcept = default;
+    virtual ~WriteDataByIdentifier() noexcept;
 };
 
 /************************************/
@@ -115,7 +115,7 @@ class GenericDataIdentifier : public ReadDataByIdentifier, public WriteDataByIde
     GenericDataIdentifier(GenericDataIdentifier&&) noexcept = delete;
     GenericDataIdentifier& operator=(const GenericDataIdentifier&) & = delete;
     GenericDataIdentifier& operator=(GenericDataIdentifier&&) & noexcept = delete;
-    virtual ~GenericDataIdentifier() noexcept = default;
+    virtual ~GenericDataIdentifier() noexcept;
 };
 // NOLINTEND(fuchsia-multiple-inheritance)
 
@@ -155,7 +155,7 @@ class RoutineControl
     RoutineControl(RoutineControl&&) noexcept = delete;
     RoutineControl& operator=(const RoutineControl&) & = delete;
     RoutineControl& operator=(RoutineControl&&) & noexcept = delete;
-    virtual ~RoutineControl() noexcept = default;
+    virtual ~RoutineControl() noexcept;
 };
 
 /************************************/
@@ -177,20 +177,14 @@ class UdsService
     /// @param input  Raw request payload bytes (service identifier + data).
     /// @return Ok(ByteVector) containing the raw response bytes on success,
     ///         Err(Error) with a UDS NegativeResponseCode on failure.
-    [[nodiscard]] virtual Result<ByteVector> handle_message(ByteView input)
-    {
-        (void)input;
-        return Result<ByteVector>{
-            score::unexpect,
-            Error::from_nrc(uds::NegativeResponseCode::SubFunctionNotSupported)};
-    }
+    [[nodiscard]] virtual Result<ByteVector> handle_message(ByteView input);
 
     UdsService() = default;
     UdsService(const UdsService&) = delete;
     UdsService(UdsService&&) noexcept = delete;
     UdsService& operator=(const UdsService&) & = delete;
     UdsService& operator=(UdsService&&) & noexcept = delete;
-    virtual ~UdsService() noexcept = default;
+    virtual ~UdsService() noexcept;
 };
 
 }  // namespace diag
