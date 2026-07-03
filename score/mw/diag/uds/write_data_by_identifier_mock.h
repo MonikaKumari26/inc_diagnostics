@@ -11,18 +11,26 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-/// @file generic_service.cpp
-/// @brief Default HandleMessage implementation for GenericService.
+/// @file write_data_by_identifier_mock.h
+/// @brief GMock implementation of score::mw::diag::WriteDataByIdentifier.
 
-#include "score/mw/diag/generic_service.h"
+#ifndef SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_MOCK_H
+#define SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_MOCK_H
+
+#include "score/mw/diag/uds/write_data_by_identifier.h"
+
+#include <gmock/gmock.h>
 
 namespace score::mw::diag::uds
 {
 
-// Default implementation rejects with SubFunctionNotSupported.
-ResultWithData GenericService::HandleMessage(ByteView /*input*/)
+/// Mock for score::mw::diag::uds::WriteDataByIdentifier (Service 0x2E).
+class WriteDataByIdentifierMock : public WriteDataByIdentifier
 {
-    return ResultWithData{score::unexpect, NegativeResponseCode::SubFunctionNotSupported};
-}
+  public:
+    MOCK_METHOD(ResultBlank, Write, (ByteView input), (override));
+};
 
 }  // namespace score::mw::diag::uds
+
+#endif  // SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_MOCK_H

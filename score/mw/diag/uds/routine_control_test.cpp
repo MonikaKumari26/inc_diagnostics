@@ -15,7 +15,7 @@
 /// @brief Unit tests for score/mw/diag/routine_control.h
 ///        Covers: StartRoutine struct and RoutineControl via RoutineControlMock.
 
-#include "score/mw/diag/routine_control_mock.h"
+#include "score/mw/diag/uds/routine_control_mock.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -32,14 +32,14 @@ TEST(RoutineControlTest, StartRoutineDefaultNoReply)
 {
     const StartRoutine result{};
     EXPECT_FALSE(result.reply.has_value());
-    EXPECT_FALSE(static_cast<bool>(result.result_provider));
+    EXPECT_EQ(result.result_provider, nullptr);
 }
 
 TEST(RoutineControlTest, StartRoutineWithReplyAndProvider)
 {
     StartRoutine result{};
     result.reply = ByteVector{std::byte{0xBE}, std::byte{0xEF}};
-    result.result_provider = []() -> Result<std::optional<ByteVector>> {
+    result.result_provider = []() -> StopResult {
         return std::optional<ByteVector>{ByteVector{std::byte{0xCA}, std::byte{0xFE}}};
     };
     ASSERT_TRUE(result.reply.has_value());
@@ -55,7 +55,7 @@ TEST(RoutineControlTest, StartRoutineWithReplyAndProvider)
 TEST(RoutineControlTest, StartRoutineProviderReturnsNone)
 {
     StartRoutine result{};
-    result.result_provider = []() -> Result<std::optional<ByteVector>> {
+    result.result_provider = []() -> StopResult {
         return std::optional<ByteVector>{std::nullopt};
     };
     const auto exec_result = result.result_provider();
@@ -66,8 +66,8 @@ TEST(RoutineControlTest, StartRoutineProviderReturnsNone)
 TEST(RoutineControlTest, StartRoutineProviderReturnsError)
 {
     StartRoutine result{};
-    result.result_provider = []() -> Result<std::optional<ByteVector>> {
-        return Result<std::optional<ByteVector>>{score::unexpect, NegativeResponseCode::ConditionsNotCorrect};
+    result.result_provider = []() -> StopResult {
+        return StopResult{score::unexpect, NegativeResponseCode::ConditionsNotCorrect};
     };
     const auto exec_result = result.result_provider();
     EXPECT_FALSE(exec_result.has_value());
@@ -80,14 +80,13 @@ TEST(RoutineControlTest, StartReturnsSuccessWithReply)
     RoutineControlMock mock{};
     StartRoutine expected_result{};
     expected_result.reply = ByteVector{std::byte{0xBE}, std::byte{0xEF}};
-    expected_result.result_provider = []() -> Result<std::optional<ByteVector>> {
+    expected_result.result_provider = []() -> StopResult {
         return std::optional<ByteVector>{ByteVector{std::byte{0xCA}, std::byte{0xFE}}};
     };
 
     const ByteVector input_data{std::byte{0x01}};
     const ByteView input_view{input_data};
-    EXPECT_CALL(mock, Start(An<std::optional<ByteView>>()))
-        .WillOnce(Return(Result<StartRoutine>{std::move(expected_result)}));
+    EXPECT_CALL(mock, Start(An<std::optional<ByteView>>())).WillOnce(Return(StartResult{std::move(expected_result)}));
 
     const auto result = mock.Start(std::optional<ByteView>{input_view});
 
@@ -99,7 +98,7 @@ TEST(RoutineControlTest, StartReturnsOkWithNoInput)
 {
     RoutineControlMock mock{};
     // ByteView lacks operator==; use typed wildcard and verify via return value.
-    EXPECT_CALL(mock, Start(An<std::optional<ByteView>>())).WillOnce(Return(Result<StartRoutine>{StartRoutine{}}));
+    EXPECT_CALL(mock, Start(An<std::optional<ByteView>>())).WillOnce(Return(StartResult{StartRoutine{}}));
 
     const auto result = mock.Start(std::nullopt);
     EXPECT_TRUE(result.has_value());
@@ -109,7 +108,7 @@ TEST(RoutineControlTest, StartReturnsError)
 {
     RoutineControlMock mock{};
     EXPECT_CALL(mock, Start(An<std::optional<ByteView>>()))
-        .WillOnce(Return(Result<StartRoutine>{score::unexpect, NegativeResponseCode::ConditionsNotCorrect}));
+        .WillOnce(Return(StartResult{score::unexpect, NegativeResponseCode::ConditionsNotCorrect}));
 
     const auto result = mock.Start(std::nullopt);
     EXPECT_FALSE(result.has_value());
@@ -119,8 +118,7 @@ TEST(RoutineControlTest, StopReturnsBytes)
 {
     RoutineControlMock mock{};
     EXPECT_CALL(mock, Stop(An<std::optional<ByteView>>()))
-        .WillOnce(Return(Result<std::optional<ByteVector>>{
-            std::optional<ByteVector>{ByteVector{std::byte{0xDA}, std::byte{0xDA}}}}));
+        .WillOnce(Return(StopResult{std::optional<ByteVector>{ByteVector{std::byte{0xDA}, std::byte{0xDA}}}}));
 
     const auto result = mock.Stop(std::nullopt);
     ASSERT_TRUE(result.has_value());
@@ -131,8 +129,7 @@ TEST(RoutineControlTest, StopReturnsBytes)
 TEST(RoutineControlTest, StopReturnsNone)
 {
     RoutineControlMock mock{};
-    EXPECT_CALL(mock, Stop(An<std::optional<ByteView>>()))
-        .WillOnce(Return(Result<std::optional<ByteVector>>{std::optional<ByteVector>{}}));
+    EXPECT_CALL(mock, Stop(An<std::optional<ByteView>>())).WillOnce(Return(StopResult{std::optional<ByteVector>{}}));
 
     const auto result = mock.Stop(std::nullopt);
     ASSERT_TRUE(result.has_value());

@@ -11,27 +11,26 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-/// @file generic_data_identifier_mock.h
-/// @brief GMock implementation of score::mw::diag::GenericDataIdentifier.
+/// @file read_data_by_identifier_mock.h
+/// @brief GMock implementation of score::mw::diag::ReadDataByIdentifier.
 
-#ifndef SCORE_MW_DIAG_API_CPP_UDS_GENERIC_DATA_IDENTIFIER_MOCK_H
-#define SCORE_MW_DIAG_API_CPP_UDS_GENERIC_DATA_IDENTIFIER_MOCK_H
+#ifndef SCORE_MW_DIAG_UDS_READ_DATA_BY_IDENTIFIER_MOCK_H
+#define SCORE_MW_DIAG_UDS_READ_DATA_BY_IDENTIFIER_MOCK_H
 
-#include "score/mw/diag/generic_data_identifier.h"
+#include "score/mw/diag/uds/read_data_by_identifier.h"
 
 #include <gmock/gmock.h>
 
 namespace score::mw::diag::uds
 {
 
-/// Mock for score::mw::diag::uds::GenericDataIdentifier (Services 0x22 + 0x2E combined).
-class GenericDataIdentifierMock : public GenericDataIdentifier
+/// Mock for score::mw::diag::uds::ReadDataByIdentifier (Service 0x22).
+class ReadDataByIdentifierMock : public ReadDataByIdentifier
 {
   public:
     MOCK_METHOD(ResultWithData, Read, (), (override));
-    MOCK_METHOD(ResultBlank, Write, (ByteView input), (override));
 };
 
 }  // namespace score::mw::diag::uds
 
-#endif  // SCORE_MW_DIAG_API_CPP_UDS_GENERIC_DATA_IDENTIFIER_MOCK_H
+#endif  // SCORE_MW_DIAG_UDS_READ_DATA_BY_IDENTIFIER_MOCK_H

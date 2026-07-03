@@ -15,7 +15,7 @@
 /// @brief Unit tests for score/mw/diag/generic_service.h
 ///        Covers: GenericService default implementation and GenericServiceMock.
 
-#include "score/mw/diag/generic_service_mock.h"
+#include "score/mw/diag/uds/generic_service_mock.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

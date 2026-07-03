@@ -14,8 +14,8 @@
 /// @file write_data_by_identifier.h
 /// @brief UDS WriteDataByIdentifier service interface (See ISO 14229-1:2020, Service 0x2E).
 
-#ifndef SCORE_MW_DIAG_API_CPP_UDS_WRITE_DATA_BY_IDENTIFIER_H
-#define SCORE_MW_DIAG_API_CPP_UDS_WRITE_DATA_BY_IDENTIFIER_H
+#ifndef SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_H
+#define SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_H
 
 #include "score/mw/diag/byte_types.h"
 #include "score/mw/diag/diag_result.h"
@@ -41,4 +41,4 @@ class WriteDataByIdentifier
 
 }  // namespace score::mw::diag::uds
 
-#endif  // SCORE_MW_DIAG_API_CPP_UDS_WRITE_DATA_BY_IDENTIFIER_H
+#endif  // SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_H

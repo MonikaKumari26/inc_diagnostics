@@ -14,8 +14,8 @@
 /// @file byte_types.h
 /// @brief Byte container type aliases: ByteVector (owning) and ByteView (non-owning).
 
-#ifndef SCORE_MW_DIAG_API_CPP_COMMON_BYTE_TYPES_H
-#define SCORE_MW_DIAG_API_CPP_COMMON_BYTE_TYPES_H
+#ifndef SCORE_MW_DIAG_BYTE_TYPES_H
+#define SCORE_MW_DIAG_BYTE_TYPES_H
 
 #include "score/span.hpp"
 
@@ -34,4 +34,4 @@ using ByteView = score::cpp::span<const std::byte>;
 
 }  // namespace score::mw::diag
 
-#endif  // SCORE_MW_DIAG_API_CPP_COMMON_BYTE_TYPES_H
+#endif  // SCORE_MW_DIAG_BYTE_TYPES_H

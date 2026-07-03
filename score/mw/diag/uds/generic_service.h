@@ -15,8 +15,8 @@
 /// @brief Generic raw UDS service handler interface for vendor-specific services
 ///        (See ISO 14229-1:2020, vendor-specific service identifiers).
 
-#ifndef SCORE_MW_DIAG_API_CPP_UDS_GENERIC_SERVICE_H
-#define SCORE_MW_DIAG_API_CPP_UDS_GENERIC_SERVICE_H
+#ifndef SCORE_MW_DIAG_UDS_GENERIC_SERVICE_H
+#define SCORE_MW_DIAG_UDS_GENERIC_SERVICE_H
 
 #include "score/mw/diag/byte_types.h"
 #include "score/mw/diag/diag_result.h"
@@ -50,4 +50,4 @@ class GenericService
 
 }  // namespace score::mw::diag::uds
 
-#endif  // SCORE_MW_DIAG_API_CPP_UDS_GENERIC_SERVICE_H
+#endif  // SCORE_MW_DIAG_UDS_GENERIC_SERVICE_H

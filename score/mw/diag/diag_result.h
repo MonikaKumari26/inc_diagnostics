@@ -18,11 +18,11 @@
 /// A richer error variant (e.g. SOVD codes) can be introduced later by
 /// defining an Error struct here and updating the aliases.
 
-#ifndef SCORE_MW_DIAG_API_CPP_COMMON_DIAG_RESULT_H
-#define SCORE_MW_DIAG_API_CPP_COMMON_DIAG_RESULT_H
+#ifndef SCORE_MW_DIAG_DIAG_RESULT_H
+#define SCORE_MW_DIAG_DIAG_RESULT_H
 
 #include "score/mw/diag/byte_types.h"
-#include "score/mw/diag/negative_response_code.h"
+#include "score/mw/diag/uds/negative_response_code.h"
 #include "score/result/result.h"  // score::details::expected
 
 namespace score::mw::diag
@@ -40,4 +40,4 @@ using ResultWithData = Result<ByteVector>;
 
 }  // namespace score::mw::diag
 
-#endif  // SCORE_MW_DIAG_API_CPP_COMMON_DIAG_RESULT_H
+#endif  // SCORE_MW_DIAG_DIAG_RESULT_H

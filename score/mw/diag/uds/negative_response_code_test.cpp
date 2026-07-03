@@ -15,7 +15,7 @@
 /// @brief Unit tests for score/mw/diag/negative_response_code.h
 ///        Covers: NegativeResponseCode enum values, VehicleManufacturerSpecificCNC.
 
-#include "score/mw/diag/negative_response_code.h"
+#include "score/mw/diag/uds/negative_response_code.h"
 
 #include <gtest/gtest.h>
 

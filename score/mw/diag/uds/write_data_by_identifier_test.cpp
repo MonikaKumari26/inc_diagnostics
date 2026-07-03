@@ -15,7 +15,7 @@
 /// @brief Unit tests for score/mw/diag/write_data_by_identifier.h
 ///        Covers: WriteDataByIdentifier via WriteDataByIdentifierMock.
 
-#include "score/mw/diag/write_data_by_identifier_mock.h"
+#include "score/mw/diag/uds/write_data_by_identifier_mock.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

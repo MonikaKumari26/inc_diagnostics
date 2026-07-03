@@ -15,7 +15,7 @@
 /// @brief Unit tests for score/mw/diag/generic_data_identifier.h
 ///        Covers: GenericDataIdentifier read and write via GenericDataIdentifierMock.
 
-#include "score/mw/diag/generic_data_identifier_mock.h"
+#include "score/mw/diag/uds/generic_data_identifier_mock.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

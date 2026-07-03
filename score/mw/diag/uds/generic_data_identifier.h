@@ -15,11 +15,11 @@
 /// @brief Combined UDS DataIdentifier supporting both ReadDataByIdentifier (Service 0x22)
 ///        and WriteDataByIdentifier (Service 0x2E) through a single implementation class.
 
-#ifndef SCORE_MW_DIAG_API_CPP_UDS_GENERIC_DATA_IDENTIFIER_H
-#define SCORE_MW_DIAG_API_CPP_UDS_GENERIC_DATA_IDENTIFIER_H
+#ifndef SCORE_MW_DIAG_UDS_GENERIC_DATA_IDENTIFIER_H
+#define SCORE_MW_DIAG_UDS_GENERIC_DATA_IDENTIFIER_H
 
-#include "score/mw/diag/read_data_by_identifier.h"
-#include "score/mw/diag/write_data_by_identifier.h"
+#include "score/mw/diag/uds/read_data_by_identifier.h"
+#include "score/mw/diag/uds/write_data_by_identifier.h"
 
 namespace score::mw::diag::uds
 {
@@ -45,4 +45,4 @@ class GenericDataIdentifier : public ReadDataByIdentifier, public WriteDataByIde
 
 }  // namespace score::mw::diag::uds
 
-#endif  // SCORE_MW_DIAG_API_CPP_UDS_GENERIC_DATA_IDENTIFIER_H
+#endif  // SCORE_MW_DIAG_UDS_GENERIC_DATA_IDENTIFIER_H

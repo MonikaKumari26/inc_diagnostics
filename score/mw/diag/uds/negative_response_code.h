@@ -15,8 +15,8 @@
 /// @brief UDS Negative Response Code (See ISO 14229-1:2020, Table A.1) and
 ///        VehicleManufacturerSpecificCNC wrapper.
 
-#ifndef SCORE_MW_DIAG_API_CPP_UDS_NEGATIVE_RESPONSE_CODE_H
-#define SCORE_MW_DIAG_API_CPP_UDS_NEGATIVE_RESPONSE_CODE_H
+#ifndef SCORE_MW_DIAG_UDS_NEGATIVE_RESPONSE_CODE_H
+#define SCORE_MW_DIAG_UDS_NEGATIVE_RESPONSE_CODE_H
 
 #include <cassert>
 #include <cstdint>
@@ -121,4 +121,4 @@ class VehicleManufacturerSpecificCNC
 
 }  // namespace score::mw::diag::uds
 
-#endif  // SCORE_MW_DIAG_API_CPP_UDS_NEGATIVE_RESPONSE_CODE_H
+#endif  // SCORE_MW_DIAG_UDS_NEGATIVE_RESPONSE_CODE_H

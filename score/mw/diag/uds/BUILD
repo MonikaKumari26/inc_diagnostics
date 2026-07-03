@@ -13,21 +13,16 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-_VISIBILITY = [
-    "//score:__subpackages__",
-]
-
 # ---------------------------------------------------------------------------
 # Libraries
 # ---------------------------------------------------------------------------
 
-# Kept as a standalone target: common:diag_result depends on this, so merging
-# it into :uds would create a circular dependency (uds → common:diag_result → uds).
+# Kept as a standalone target: diag_result depends on this, so merging
+# it into :uds would create a circular dependency (uds → diag_result → uds).
 cc_library(
     name = "negative_response_code",
     hdrs = ["negative_response_code.h"],
-    include_prefix = "score/mw/diag",
-    visibility = _VISIBILITY,
+    visibility = ["//score:__subpackages__"],
 )
 
 cc_library(
@@ -42,12 +37,12 @@ cc_library(
         "routine_control.h",
         "write_data_by_identifier.h",
     ],
-    include_prefix = "score/mw/diag",
-    visibility = _VISIBILITY,
+    visibility = ["//score:__subpackages__"],
     deps = [
         ":negative_response_code",
-        "//score/mw/diag/api_cpp/common:byte_types",
-        "//score/mw/diag/api_cpp/common:diag_result",
+        "//score/mw/diag:byte_types",
+        "//score/mw/diag:diag_result",
+        "@score_baselibs//score/language/futurecpp",
     ],
 )
 
@@ -65,8 +60,7 @@ cc_library(
         "routine_control_mock.h",
         "write_data_by_identifier_mock.h",
     ],
-    include_prefix = "score/mw/diag",
-    visibility = _VISIBILITY,
+    visibility = ["//score:__subpackages__"],
     deps = [
         ":uds",
         "@googletest//:gtest",

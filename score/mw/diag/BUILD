@@ -13,19 +13,14 @@
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
-_VISIBILITY = [
-    "//score:__subpackages__",
-]
-
 # ---------------------------------------------------------------------------
-# Libraries
+# Common type aliases
 # ---------------------------------------------------------------------------
 
 cc_library(
     name = "byte_types",
     hdrs = ["byte_types.h"],
-    include_prefix = "score/mw/diag",
-    visibility = _VISIBILITY,
+    visibility = ["//score:__subpackages__"],
     deps = [
         "@score_baselibs//score/language/futurecpp",
     ],
@@ -34,20 +29,24 @@ cc_library(
 cc_library(
     name = "diag_result",
     hdrs = ["diag_result.h"],
-    include_prefix = "score/mw/diag",
-    visibility = _VISIBILITY,
+    visibility = ["//score:__subpackages__"],
     deps = [
         ":byte_types",
-        "//score/mw/diag/api_cpp/uds:negative_response_code",
+        "//score/mw/diag/uds:negative_response_code",
         "@score_baselibs//score/result",
     ],
 )
 
+# ---------------------------------------------------------------------------
+# Aggregation target
+# ---------------------------------------------------------------------------
+
 cc_library(
-    name = "common",
-    visibility = _VISIBILITY,
+    name = "diag",
+    visibility = ["//score:__subpackages__"],
     deps = [
         ":byte_types",
         ":diag_result",
+        "//score/mw/diag/uds",
     ],
 )

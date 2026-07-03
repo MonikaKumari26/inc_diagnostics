@@ -15,7 +15,7 @@
 /// @brief Unit tests for score/mw/diag/read_data_by_identifier.h
 ///        Covers: ReadDataByIdentifier via ReadDataByIdentifierMock.
 
-#include "score/mw/diag/read_data_by_identifier_mock.h"
+#include "score/mw/diag/uds/read_data_by_identifier_mock.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
