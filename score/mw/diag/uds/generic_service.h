@@ -20,6 +20,8 @@
 
 #include "score/mw/diag/byte_types.h"
 #include "score/mw/diag/diag_result.h"
+#include "score/mw/diag/uds/negative_response_code.h"
+#include "score/result/result.h"  // score::unexpect
 
 namespace score::mw::diag::uds
 {
@@ -38,7 +40,10 @@ class GenericService
     /// Handle a raw UDS message.
     /// @param input  Raw request payload bytes (service identifier + data).
     /// @return ResultWithData on success, NegativeResponseCode on failure.
-    [[nodiscard]] virtual ResultWithData HandleMessage(ByteView input);
+    [[nodiscard]] virtual ResultWithData HandleMessage(ByteView /*input*/)
+    {
+        return ResultWithData{score::unexpect, NegativeResponseCode::SubFunctionNotSupported};
+    }
 
     GenericService() = default;
     virtual ~GenericService() noexcept = default;

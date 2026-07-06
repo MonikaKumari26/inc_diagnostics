@@ -27,9 +27,6 @@ cc_library(
 
 cc_library(
     name = "uds",
-    srcs = [
-        "generic_service.cpp",
-    ],
     hdrs = [
         "generic_data_identifier.h",
         "generic_service.h",
@@ -43,6 +40,7 @@ cc_library(
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
         "@score_baselibs//score/language/futurecpp",
+        "@score_baselibs//score/result",
     ],
 )
 
@@ -74,12 +72,9 @@ cc_library(
 cc_test(
     name = "uds_test",
     srcs = [
-        "generic_data_identifier_test.cpp",
         "generic_service_test.cpp",
         "negative_response_code_test.cpp",
-        "read_data_by_identifier_test.cpp",
         "routine_control_test.cpp",
-        "write_data_by_identifier_test.cpp",
     ],
     tags = ["unit"],
     deps = [

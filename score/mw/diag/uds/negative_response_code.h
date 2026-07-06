@@ -18,7 +18,6 @@
 #ifndef SCORE_MW_DIAG_UDS_NEGATIVE_RESPONSE_CODE_H
 #define SCORE_MW_DIAG_UDS_NEGATIVE_RESPONSE_CODE_H
 
-#include <cassert>
 #include <cstdint>
 
 namespace score::mw::diag::uds
@@ -100,12 +99,12 @@ class VehicleManufacturerSpecificCNC
     /// Inclusive upper bound of the manufacturer-specific NRC range (ISO 14229-1:2020).
     static constexpr std::uint8_t kRangeMax{0xFEU};
 
-    /// Factory: construct from a validated byte value.
-    /// Precondition: value must be in [kRangeMin, kRangeMax].
-    [[nodiscard]] static constexpr VehicleManufacturerSpecificCNC from(std::uint8_t value) noexcept
+    /// Value must be in [kRangeMin, kRangeMax] — enforced at compile time.
+    template <std::uint8_t Val>
+    [[nodiscard]] static constexpr VehicleManufacturerSpecificCNC from() noexcept
     {
-        assert(value >= kRangeMin && value <= kRangeMax && "VehicleManufacturerSpecificCNC out of range");
-        return VehicleManufacturerSpecificCNC{value};
+        static_assert(Val >= kRangeMin && Val <= kRangeMax, "VehicleManufacturerSpecificCNC out of range");
+        return VehicleManufacturerSpecificCNC{Val};
     }
 
     [[nodiscard]] constexpr std::uint8_t value() const noexcept
