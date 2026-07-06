@@ -70,12 +70,28 @@ cc_library(
 # ---------------------------------------------------------------------------
 
 cc_test(
-    name = "uds_test",
-    srcs = [
-        "generic_service_test.cpp",
-        "negative_response_code_test.cpp",
-        "routine_control_test.cpp",
+    name = "negative_response_code_test",
+    srcs = ["negative_response_code_test.cpp"],
+    tags = ["unit"],
+    deps = [
+        ":negative_response_code",
+        "@googletest//:gtest_main",
     ],
+)
+
+cc_test(
+    name = "generic_service_test",
+    srcs = ["generic_service_test.cpp"],
+    tags = ["unit"],
+    deps = [
+        ":uds_mocks",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "routine_control_test",
+    srcs = ["routine_control_test.cpp"],
     tags = ["unit"],
     deps = [
         ":uds_mocks",

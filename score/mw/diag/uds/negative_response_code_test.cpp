@@ -73,4 +73,27 @@ TEST(UdsResponseCodeTest, VehicleManufacturerSpecificCNCEqualityOperators)
     EXPECT_NE(custom_error_a.value(), some_error.value());
 }
 
+// ── RangedNrc runtime from() ─────────────────────────────────────────────
+
+TEST(UdsResponseCodeTest, RuntimeFromInRangeReturnsValue)
+{
+    const auto result = VehicleManufacturerSpecificCNC::from(VehicleManufacturerSpecificCNC::kRangeMin);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->value(), VehicleManufacturerSpecificCNC::kRangeMin);
+}
+
+TEST(UdsResponseCodeTest, RuntimeFromBelowRangeReturnsNullopt)
+{
+    const auto result =
+        VehicleManufacturerSpecificCNC::from(static_cast<std::uint8_t>(VehicleManufacturerSpecificCNC::kRangeMin - 1U));
+    EXPECT_FALSE(result.has_value());
+}
+
+TEST(UdsResponseCodeTest, RuntimeFromAboveRangeReturnsNullopt)
+{
+    const auto result =
+        VehicleManufacturerSpecificCNC::from(static_cast<std::uint8_t>(VehicleManufacturerSpecificCNC::kRangeMax + 1U));
+    EXPECT_FALSE(result.has_value());
+}
+
 }  // namespace score::mw::diag::uds
