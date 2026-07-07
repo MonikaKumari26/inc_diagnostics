@@ -13,8 +13,7 @@
 
 /// @file debounce_test.cpp
 /// @brief Unit tests for score/mw/diag/dtc/debounce.h
-///        Covers: Debounce::Timer IsValid; Debounce::Counter IsValid;
-///                Debounce IsSet, GetAlgorithm.
+///        Covers: Debounce::TimeBased IsValid; Debounce::CounterBased IsValid; Debounce GetAlgorithm.
 
 #include "score/mw/diag/dtc/debounce.h"
 
@@ -26,84 +25,72 @@ namespace
 {
 
 // ---------------------------------------------------------------------------
-// Timer — IsValid
+// TimeBased — IsValid
 // ---------------------------------------------------------------------------
 
-TEST(TimerTest, IsValidReturnsTrueForPositiveDurations)
+TEST(TimeBasedTest, IsValidReturnsTrueForPositiveDurations)
 {
-    EXPECT_TRUE((Debounce::Timer{200U, 100U}.IsValid()));
+    EXPECT_TRUE((Debounce::TimeBased{200U, 100U}.IsValid()));
 }
 
-TEST(TimerTest, IsValidReturnsFalseWhenFailedMsIsZero)
+TEST(TimeBasedTest, IsValidReturnsFalseWhenFailedMsIsZero)
 {
-    EXPECT_FALSE((Debounce::Timer{0U, 100U}.IsValid()));
+    EXPECT_FALSE((Debounce::TimeBased{0U, 100U}.IsValid()));
 }
 
-TEST(TimerTest, IsValidReturnsFalseWhenPassedMsIsZero)
+TEST(TimeBasedTest, IsValidReturnsFalseWhenPassedMsIsZero)
 {
-    EXPECT_FALSE((Debounce::Timer{200U, 0U}.IsValid()));
-}
-
-// ---------------------------------------------------------------------------
-// Counter — IsValid
-// ---------------------------------------------------------------------------
-
-TEST(CounterTest, IsValidReturnsTrueForValidConfig)
-{
-    EXPECT_TRUE((Debounce::Counter{10, -5, 2U, 1U, 0, 0, false, false}.IsValid()));
-}
-
-TEST(CounterTest, IsValidReturnsFalseWhenFailedThresholdIsZero)
-{
-    EXPECT_FALSE((Debounce::Counter{0, -5, 2U, 1U, 0, 0, false, false}.IsValid()));
-}
-
-TEST(CounterTest, IsValidReturnsFalseWhenPassedThresholdIsZero)
-{
-    EXPECT_FALSE((Debounce::Counter{10, 0, 2U, 1U, 0, 0, false, false}.IsValid()));
-}
-
-TEST(CounterTest, IsValidReturnsFalseWhenFailedStepsizeIsZero)
-{
-    EXPECT_FALSE((Debounce::Counter{10, -5, 0U, 1U, 0, 0, false, false}.IsValid()));
-}
-
-TEST(CounterTest, IsValidReturnsFalseWhenPassedStepsizeIsZero)
-{
-    EXPECT_FALSE((Debounce::Counter{10, -5, 2U, 0U, 0, 0, false, false}.IsValid()));
+    EXPECT_FALSE((Debounce::TimeBased{200U, 0U}.IsValid()));
 }
 
 // ---------------------------------------------------------------------------
-// Debounce — IsSet, GetAlgorithm, operator==
+// CounterBased — IsValid
 // ---------------------------------------------------------------------------
 
-TEST(DebounceTest, DefaultConstructedIsNotSet) { EXPECT_FALSE(Debounce{}.IsSet()); }
-
-TEST(DebounceTest, IsSetTrueWhenConstructedWithTimer)
+TEST(CounterBasedTest, IsValidReturnsTrueForValidConfig)
 {
-    EXPECT_TRUE((Debounce{Debounce::Timer{200U, 100U}}.IsSet()));
+    EXPECT_TRUE((Debounce::CounterBased{10, -5, 2U, 1U, 0, 0, false, false}.IsValid()));
 }
 
-TEST(DebounceTest, IsSetTrueWhenConstructedWithCounter)
+TEST(CounterBasedTest, IsValidReturnsFalseWhenFailedThresholdIsZero)
 {
-    EXPECT_TRUE((Debounce{Debounce::Counter{10, -5, 2U, 1U, 0, 0, false, false}}.IsSet()));
+    EXPECT_FALSE((Debounce::CounterBased{0, -5, 2U, 1U, 0, 0, false, false}.IsValid()));
 }
 
-TEST(DebounceTest, GetAlgorithmHoldsTimerWhenConstructedWithTimer)
+TEST(CounterBasedTest, IsValidReturnsFalseWhenPassedThresholdIsZero)
 {
-    const Debounce d{Debounce::Timer{200U, 100U}};
-    ASSERT_TRUE(std::holds_alternative<Debounce::Timer>(d.GetAlgorithm()));
-    const auto& t = std::get<Debounce::Timer>(d.GetAlgorithm());
+    EXPECT_FALSE((Debounce::CounterBased{10, 0, 2U, 1U, 0, 0, false, false}.IsValid()));
+}
+
+TEST(CounterBasedTest, IsValidReturnsFalseWhenFailedStepsizeIsZero)
+{
+    EXPECT_FALSE((Debounce::CounterBased{10, -5, 0U, 1U, 0, 0, false, false}.IsValid()));
+}
+
+TEST(CounterBasedTest, IsValidReturnsFalseWhenPassedStepsizeIsZero)
+{
+    EXPECT_FALSE((Debounce::CounterBased{10, -5, 2U, 0U, 0, 0, false, false}.IsValid()));
+}
+
+// ---------------------------------------------------------------------------
+// Debounce — GetAlgorithm
+// ---------------------------------------------------------------------------
+
+TEST(DebounceTest, GetAlgorithmHoldsTimeBasedWhenConstructedWithTimeBased)
+{
+    const Debounce d{Debounce::TimeBased{200U, 100U}};
+    ASSERT_TRUE(std::holds_alternative<Debounce::TimeBased>(d.GetAlgorithm()));
+    const auto& t = std::get<Debounce::TimeBased>(d.GetAlgorithm());
     EXPECT_EQ(t.failed_ms, 200U);
     EXPECT_EQ(t.passed_ms, 100U);
 }
 
-TEST(DebounceTest, GetAlgorithmHoldsCounterWhenConstructedWithCounter)
+TEST(DebounceTest, GetAlgorithmHoldsCounterBasedWhenConstructedWithCounterBased)
 {
-    const Debounce::Counter cfg{10, -5, 2U, 1U, 0, 0, false, false};
+    const Debounce::CounterBased cfg{10, -5, 2U, 1U, 0, 0, false, false};
     const Debounce d{cfg};
-    ASSERT_TRUE(std::holds_alternative<Debounce::Counter>(d.GetAlgorithm()));
-    const auto& c = std::get<Debounce::Counter>(d.GetAlgorithm());
+    ASSERT_TRUE(std::holds_alternative<Debounce::CounterBased>(d.GetAlgorithm()));
+    const auto& c = std::get<Debounce::CounterBased>(d.GetAlgorithm());
     EXPECT_EQ(c.failed_threshold, 10);
     EXPECT_EQ(c.passed_threshold, -5);
     EXPECT_EQ(c.failed_stepsize, 2U);

@@ -21,22 +21,28 @@
 
 #include <gmock/gmock.h>
 
-namespace score::mw::diag::dtc
+namespace score::mw::diag::dtc::test
 {
 
 /// Mock for score::mw::diag::dtc::Builder.
 class BuilderMock : public Builder
 {
   public:
-    MOCK_METHOD(BuilderMock&, WithMonitor, (MonitorIdentifier), (override));
-    MOCK_METHOD(BuilderMock&, WithEvent, (EventIdentifier), (override));
-    MOCK_METHOD(BuilderMock&, WithClearCondition, (ConditionIdentifier), (override));
-    MOCK_METHOD(BuilderMock&, ConfigureAsNotClearable, (), (override));
-    MOCK_METHOD(BuilderMock&, ConfigureAsReenterAfterCleared, (), (override));
-    MOCK_METHOD(BuilderMock&, ConfigureDebouncing, (Debounce), (override));
+    /// @brief Default-constructs and installs a default action for Build() that returns
+    ///        a default-constructed DTCMock, so tests that do not have to care about
+    ///        Build() and do not need an explicit ON_CALL / EXPECT_CALL themselves.
+    BuilderMock();
+
+    // NOLINTBEGIN(readability-identifier-naming) -- MOCK_METHOD is a gmock macro, not a method name
+    MOCK_METHOD(BuilderMock&, WithMonitor, (MonitorIdentifier monitor), (override));
+    MOCK_METHOD(BuilderMock&, WithEvent, (EventIdentifier event), (override));
+    MOCK_METHOD(BuilderMock&, WithClearCondition, (ConditionIdentifier condition), (override));
+    MOCK_METHOD(BuilderMock&, ConfigureClearBehaviour, (ClearBehaviour behaviour), (override));
+    MOCK_METHOD(BuilderMock&, ConfigureDebouncing, (Debounce debouncing), (override));
     MOCK_METHOD((std::unique_ptr<DTC>), Build, (), (override));
+    // NOLINTEND(readability-identifier-naming)
 };
 
-}  // namespace score::mw::diag::dtc
+}  // namespace score::mw::diag::dtc::test
 
 #endif  // SCORE_MW_DIAG_DTC_BUILDER_MOCK_H
