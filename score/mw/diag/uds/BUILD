@@ -107,6 +107,17 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "serialization",
+    hdrs = ["serialization.h"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        ":uds",
+        "//score/mw/diag:byte_types",
+        "//score/mw/diag:diag_result",
+    ],
+)
+
 # ---------------------------------------------------------------------------
 # Mock libraries (testonly)
 # ---------------------------------------------------------------------------
@@ -133,6 +144,17 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "serialization_mocks",
+    testonly = True,
+    hdrs = ["serialization_mock.h"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        ":serialization",
+        "@googletest//:gtest",
+    ],
+)
+
 # ---------------------------------------------------------------------------
 # Unit tests
 # ---------------------------------------------------------------------------
@@ -153,4 +175,14 @@ test_suite(
         ":negative_response_code_test",
     ],
     visibility = ["//score/mw/diag:__pkg__"],
+)
+
+cc_test(
+    name = "serialization_test",
+    srcs = ["serialization_test.cpp"],
+    tags = ["unit"],
+    deps = [
+        ":serialization",
+        "@googletest//:gtest_main",
+    ],
 )
