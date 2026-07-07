@@ -22,6 +22,7 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 cc_library(
     name = "negative_response_code",
     hdrs = ["negative_response_code.h"],
+    srcs = ["negative_response_code.cpp"],
     visibility = ["//score:__subpackages__"],
 )
 
@@ -34,13 +35,13 @@ cc_library(
         "routine_control.h",
         "write_data_by_identifier.h",
     ],
+    srcs = ["uds.cpp"],
     visibility = ["//score:__subpackages__"],
     deps = [
         ":negative_response_code",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
         "@score_baselibs//score/language/futurecpp",
-        "@score_baselibs//score/result",
     ],
 )
 
@@ -49,7 +50,7 @@ cc_library(
 # ---------------------------------------------------------------------------
 
 cc_library(
-    name = "uds_mocks",
+    name = "mocks",
     testonly = True,
     hdrs = [
         "generic_data_identifier_mock.h",
@@ -80,21 +81,20 @@ cc_test(
 )
 
 cc_test(
-    name = "generic_service_test",
-    srcs = ["generic_service_test.cpp"],
-    tags = ["unit"],
-    deps = [
-        ":uds_mocks",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
     name = "routine_control_test",
     srcs = ["routine_control_test.cpp"],
     tags = ["unit"],
     deps = [
-        ":uds_mocks",
+        ":uds",
         "@googletest//:gtest_main",
     ],
+)
+
+test_suite(
+    name = "unit_tests",
+    tests = [
+        ":negative_response_code_test",
+        ":routine_control_test",
+    ],
+    visibility = ["//score/mw/diag:__pkg__"],
 )

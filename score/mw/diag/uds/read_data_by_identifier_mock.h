@@ -12,7 +12,7 @@
  ********************************************************************************/
 
 /// @file read_data_by_identifier_mock.h
-/// @brief GMock implementation of score::mw::diag::ReadDataByIdentifier.
+/// @brief GMock implementation of score::mw::diag::uds::ReadDataByIdentifier.
 
 #ifndef SCORE_MW_DIAG_UDS_READ_DATA_BY_IDENTIFIER_MOCK_H
 #define SCORE_MW_DIAG_UDS_READ_DATA_BY_IDENTIFIER_MOCK_H
@@ -21,16 +21,16 @@
 
 #include <gmock/gmock.h>
 
-namespace score::mw::diag::uds
+namespace score::mw::diag::uds::test
 {
 
 /// Mock for score::mw::diag::uds::ReadDataByIdentifier (Service 0x22).
 class ReadDataByIdentifierMock : public ReadDataByIdentifier
 {
   public:
-    MOCK_METHOD(ResultWithData, Read, (), (override));
+    MOCK_METHOD(Result<ByteVector>, Read, (), (override));
 };
 
-}  // namespace score::mw::diag::uds
+}  // namespace score::mw::diag::uds::test
 
 #endif  // SCORE_MW_DIAG_UDS_READ_DATA_BY_IDENTIFIER_MOCK_H

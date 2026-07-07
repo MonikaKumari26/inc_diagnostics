@@ -33,7 +33,7 @@ cc_library(
     deps = [
         ":byte_types",
         "//score/mw/diag/uds:negative_response_code",
-        "@score_baselibs//score/result",
+        "@score_baselibs//score/language/futurecpp",
     ],
 )
 
@@ -49,4 +49,16 @@ cc_library(
         ":diag_result",
         "//score/mw/diag/uds",
     ],
+)
+
+# ---------------------------------------------------------------------------
+# Test aggregation
+# ---------------------------------------------------------------------------
+
+test_suite(
+    name = "unit_tests",
+    tests = [
+        "//score/mw/diag/uds:unit_tests",
+    ],
+    visibility = ["//score/mw:__pkg__"],
 )

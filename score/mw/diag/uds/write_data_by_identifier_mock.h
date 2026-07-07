@@ -12,7 +12,7 @@
  ********************************************************************************/
 
 /// @file write_data_by_identifier_mock.h
-/// @brief GMock implementation of score::mw::diag::WriteDataByIdentifier.
+/// @brief GMock implementation of score::mw::diag::uds::WriteDataByIdentifier.
 
 #ifndef SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_MOCK_H
 #define SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_MOCK_H
@@ -21,16 +21,16 @@
 
 #include <gmock/gmock.h>
 
-namespace score::mw::diag::uds
+namespace score::mw::diag::uds::test
 {
 
 /// Mock for score::mw::diag::uds::WriteDataByIdentifier (Service 0x2E).
 class WriteDataByIdentifierMock : public WriteDataByIdentifier
 {
   public:
-    MOCK_METHOD(ResultBlank, Write, (ByteView input), (override));
+    MOCK_METHOD(Result<void>, Write, (ByteView input), (override));
 };
 
-}  // namespace score::mw::diag::uds
+}  // namespace score::mw::diag::uds::test
 
 #endif  // SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_MOCK_H
