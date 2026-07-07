@@ -23,7 +23,8 @@
 ///       .WithMonitor(MonitorIdentifier{"mon/example"})
 ///       .WithEvent(EventIdentifier{"evt/example"})
 ///       .WithClearCondition(ConditionIdentifier{"cond/example"})
-///       .ConfigureDebouncing(Debounce::Timer{200U, 100U})  // Debounce::Timer implicitly converts to Debounce
+///       .ConfigureClearBehaviour(ClearBehaviour::kNotClearable)
+///       .ConfigureDebouncing(Debounce::TimeBased{200U, 100U})  // Debounce::TimeBased implicitly converts to Debounce
 ///       .Build();
 /// @endcode
 
@@ -38,6 +39,15 @@
 
 namespace score::mw::diag::dtc
 {
+
+/// @brief Selects the clearing behaviour of a DTC — passed to Builder::ConfigureClearBehaviour().
+///        The three options are mutually exclusive by construction: only one value can be passed.
+enum class ClearBehaviour : std::uint8_t
+{
+    kClearable,            ///< (Default) Tester may clear this DTC via ClearDiagnosticInformation.
+    kNotClearable,         ///< Tester clear requests are ignored for this DTC.
+    kReenterAfterCleared,  ///< DTC re-enters storage immediately after a tester clear.
+};
 
 /// @brief Abstract builder interface for constructing fully-configured DTC instances.
 /// @note At most one debouncing algorithm may be configured per DTC.
@@ -58,15 +68,14 @@ class Builder
     /// @param condition Identifier of the clear condition (must be non-empty).
     virtual Builder& WithClearCondition(ConditionIdentifier condition) = 0;
 
-    /// @brief Prevent this DTC from being cleared by a tester ClearDiagnosticInformation request.
-    ///        By default a DTC is clearable; call this to opt out.
-    virtual Builder& ConfigureAsNotClearable() = 0;
+    /// @brief Set the clearing behaviour for this DTC.
+    ///        The three options are mutually exclusive — passing a single ClearBehaviour value
+    ///        is the only way to configure this, making conflicting combinations a compile error.
+    /// @param behaviour One of ClearBehaviour::kClearable (default), kNotClearable,
+    ///                  or kReenterAfterCleared.
+    virtual Builder& ConfigureClearBehaviour(ClearBehaviour behaviour) = 0;
 
-    /// @brief Re-enter this DTC into storage immediately after a tester clear.
-    ///        By default a cleared DTC stays cleared until the next Report(kFailed) cycle.
-    virtual Builder& ConfigureAsReenterAfterCleared() = 0;
-
-    /// @brief Configure the debouncing algorithm — Timer (time-based) or Counter (counter-based).
+    /// @brief Configure the debouncing algorithm — TimeBased (time-based) or CounterBased (counter-based).
     ///        Pass a default-constructed Debounce{} to explicitly reset to pass-through.
     /// @param debouncing Debounce instance holding the chosen algorithm, or Debounce{} for pass-through.
     virtual Builder& ConfigureDebouncing(Debounce debouncing) = 0;
@@ -78,8 +87,8 @@ class Builder
 
     Builder(const Builder&) = delete;
     Builder(Builder&&) noexcept = delete;
-    Builder& operator=(const Builder&) & = delete;
-    Builder& operator=(Builder&&) & noexcept = delete;
+    Builder& operator=(const Builder&) = delete;
+    Builder& operator=(Builder&&) noexcept = delete;
     virtual ~Builder() noexcept = default;
 
   protected:

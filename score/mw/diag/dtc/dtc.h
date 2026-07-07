@@ -26,7 +26,7 @@ namespace score::mw::diag::dtc
 {
 
 /************************************/
-/* FormatType                    */
+/* FormatType                       */
 /************************************/
 
 /// @brief DTC number format to request via DTC::Number().
@@ -38,7 +38,7 @@ enum class FormatType : std::uint8_t
 };
 
 /************************************/
-/* InitReason                    */
+/* InitReason                       */
 /************************************/
 
 /// @brief Reason code delivered to the DTC::OnInit() callback.
@@ -65,7 +65,7 @@ class DTC
     /// @brief Report the fault status for one monitoring cycle.
     /// @param status Outcome of the current monitoring cycle (kPassed or kFailed).
     /// @return Ok on success; Err if the middleware could not process the report.
-    [[nodiscard]] virtual ResultBlank Report(Status status) = 0;
+    [[nodiscard]] virtual Result<score::cpp::blank> Report(Status status) = 0;
 
     /// @brief Allow this DTC to be cleared by a tester ClearDiagnosticInformation request (default).
     virtual void MakeClearable() noexcept = 0;
@@ -88,8 +88,8 @@ class DTC
 
     DTC(const DTC&) = delete;
     DTC(DTC&&) noexcept = delete;
-    DTC& operator=(const DTC&) & = delete;
-    DTC& operator=(DTC&&) & noexcept = delete;
+    DTC& operator=(const DTC&) = delete;
+    DTC& operator=(DTC&&) noexcept = delete;
     virtual ~DTC() noexcept = default;
 
   protected:

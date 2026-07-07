@@ -26,26 +26,22 @@ namespace score::mw::diag::dtc
 
 /// @brief Debouncing configuration for a DTC instance.
 ///
-/// Holds at most one algorithm — time-based (Timer) or counter-based (Counter).
+/// Holds at most one algorithm — time-based (TimeBased) or counter-based (CounterBased).
 /// Default-constructed means no middleware debouncing: every Report() call is passed through.
-///
-/// @par Usage
-/// @code
-///   Debounce d{Debounce::Timer{200U, 100U}};
-///   SCORE_LANGUAGE_FUTURECPP_PRECONDITION(d.IsSet());
-///   auto& algo = d.GetAlgorithm(); // std::variant<std::monostate, Timer, Counter>
-/// @endcode
-class Debounce
+class Debounce final
 {
   public:
+    /// @brief Alias for std::monostate — represents pass-through (no debouncing).
+    using None = std::monostate;
+
     /************************************/
-    /* Timer debouncing                 */
+    /* Time-based debouncing            */
     /************************************/
 
     /// @brief Time-based debouncing: fault must persist for @p failed_ms ms to qualify as Failed,
     ///        or healthy for @p passed_ms ms to qualify as Passed.
     ///        Both values are application-specific and must be set explicitly.
-    struct Timer
+    struct TimeBased
     {
         std::uint32_t failed_ms;  ///< Continuous fail duration (ms) to qualify as Failed.
         std::uint32_t passed_ms;  ///< Continuous pass duration (ms) to qualify as Passed.
@@ -59,12 +55,12 @@ class Debounce
     };
 
     /************************************/
-    /* Counter debouncing               */
+    /* Counter-based debouncing         */
     /************************************/
 
     /// @brief Counter-based debouncing parameters.
     ///        All thresholds, step sizes and jump values are application-specific and must be set explicitly.
-    struct Counter
+    struct CounterBased
     {
         std::int16_t
             failed_threshold;  ///< Counter threshold to qualify as Failed (must be positive).
@@ -91,43 +87,44 @@ class Debounce
     /************************************/
 
     /// @brief Selects the debouncing algorithm — pass-through (none), time-based, or counter-based.
-    ///        std::monostate = pass-through: the middleware applies no algorithm and forwards
+    ///        None (std::monostate) = pass-through: the middleware applies no algorithm and forwards
     ///        every Report() call as-is.
-    using Algorithm = std::variant<std::monostate, Timer, Counter>;
+    using Algorithm = std::variant<None, TimeBased, CounterBased>;
 
     /************************************/
     /* Construction                     */
     /************************************/
 
     /// @brief Default: no debouncing — every Report() call is passed through; IsSet() returns false.
-    Debounce() = default;
+    constexpr Debounce() = default;
 
     /// @brief Configure time-based debouncing.
-    /// @param timer Time-based algorithm parameters; must satisfy Timer::IsValid().
-    // NOLINTNEXTLINE(google-explicit-constructor) — intentional: Timer IS a complete Debounce config
-    Debounce(Timer timer) noexcept : algorithm_{timer} {}  // NOLINT(hicpp-explicit-conversions)
+    /// @param timer Time-based algorithm parameters; must satisfy TimeBased::IsValid().
+    // NOLINTNEXTLINE(google-explicit-constructor) — intentional: TimeBased IS a complete Debounce config
+    constexpr Debounce(TimeBased timer) noexcept
+        : algorithm_{timer} {}  // NOLINT(hicpp-explicit-conversions) — same intent as above
 
     /// @brief Configure counter-based debouncing.
-    /// @param counter Counter-based algorithm parameters; must satisfy Counter::IsValid().
-    // NOLINTNEXTLINE(google-explicit-constructor) — intentional: Counter IS a complete Debounce config
-    Debounce(Counter counter) noexcept
-        : algorithm_{counter} {}  // NOLINT(hicpp-explicit-conversions)
+    /// @param counter Counter-based algorithm parameters; must satisfy CounterBased::IsValid().
+    // NOLINTNEXTLINE(google-explicit-constructor) — intentional: CounterBased IS a complete Debounce config
+    constexpr Debounce(CounterBased counter) noexcept
+        : algorithm_{counter} {}  // NOLINT(hicpp-explicit-conversions) — same intent as above
 
     /************************************/
     /* Queries                          */
     /************************************/
 
-    /// @brief Returns true if a debouncing algorithm (Timer or Counter) has been configured.
-    /// @return true if a Timer or Counter is active; false if no debouncing (pass-through).
+    /// @brief Returns true if a debouncing algorithm (TimeBased or CounterBased) has been configured.
+    /// @return true if a TimeBased or CounterBased is active; false if no debouncing (pass-through).
     [[nodiscard]] constexpr bool IsSet() const noexcept
     {
-        return !std::holds_alternative<std::monostate>(algorithm_);
+        return !std::holds_alternative<None>(algorithm_);
     }
 
     /// @brief Returns the configured algorithm variant.
-    ///        Inspect with std::holds_alternative<Timer> or std::get<Timer> / std::get<Counter>.
-    /// @return const reference to the Algorithm variant; holds std::monostate when IsSet() == false.
-    [[nodiscard]] const Algorithm& GetAlgorithm() const noexcept { return algorithm_; }
+    ///        Inspect with std::holds_alternative<TimeBased> or std::get<TimeBased> / std::get<Counter>.
+    /// @return const reference to the Algorithm variant; holds None when IsSet() == false.
+    [[nodiscard]] constexpr const Algorithm& GetAlgorithm() const noexcept { return algorithm_; }
 
   private:
     Algorithm algorithm_{};

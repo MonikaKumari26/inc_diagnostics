@@ -63,23 +63,10 @@ namespace detail
 /// @tparam Tag       Phantom type that makes MonitorIdentifier, EventIdentifier and
 ///                   ConditionIdentifier distinct, incompatible types at compile time.
 /// @tparam Validator Policy struct providing a constexpr IsValid(std::string_view) predicate.
-///                   String literals are validated at compile time (static_assert).
-///                   Runtime strings are validated via SCORE_LANGUAGE_FUTURECPP_PRECONDITION.
+///                   Validated at construction via SCORE_LANGUAGE_FUTURECPP_PRECONDITION.
 template<typename Tag, typename Validator> class Identifier
 {
   public:
-    /// @brief Construct from a string literal — validated at compile time.
-    /// @tparam N Length of the string literal including null terminator.
-    /// @param  literal Non-empty string literal.
-    /// @note   In C++17, function parameters are never constexpr, so Validator::IsValid()
-    ///         cannot be called inside static_assert. N > 1U is the compile-time-provable
-    ///         equivalent of NonEmptyValidator::IsValid for literals. If the validator is
-    ///         tightened, update this check accordingly or migrate to C++20 consteval.
-    template<std::size_t N> explicit Identifier(const char (&literal)[N]) : value_{literal, N - 1U}
-    {
-        static_assert(N > 1U, "Identifier: string literal must not be empty");
-    }
-
     /// @brief Construct from a std::string_view or std::string — validated at runtime.
     ///        std::string implicitly converts to std::string_view, so this single
     ///        overload accepts all non-literal string-like types without ambiguity.
@@ -95,18 +82,24 @@ template<typename Tag, typename Validator> class Identifier
     [[nodiscard]] std::string_view GetValue() const noexcept { return value_; }
 
     /// @brief Returns true if both identifiers hold the same string value.
+    /// @param other The identifier to compare against.
+    /// @return true if both hold the same string value.
     [[nodiscard]] bool operator==(const Identifier& other) const noexcept
     {
         return value_ == other.value_;
     }
 
     /// @brief Returns true if the identifiers hold different string values.
+    /// @param other The identifier to compare against.
+    /// @return true if the string values differ.
     [[nodiscard]] bool operator!=(const Identifier& other) const noexcept
     {
         return !(*this == other);
     }
 
     /// @brief Lexicographic ordering — enables use in std::map and std::set.
+    /// @param other The identifier to compare against.
+    /// @return true if this identifier is lexicographically less than @p other.
     [[nodiscard]] bool operator<(const Identifier& other) const noexcept
     {
         return value_ < other.value_;
