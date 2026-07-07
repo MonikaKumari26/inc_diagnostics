@@ -107,6 +107,23 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "diagnostic_job_collection",
+    hdrs = ["diagnostic_job_collection.h"],
+    visibility = ["//score:__subpackages__"],
+)
+
+cc_library(
+    name = "diagnostic_services_collection_builder",
+    hdrs = ["diagnostic_services_collection_builder.h"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        ":diagnostic_job_collection",
+        ":uds",
+        "//score/mw/diag:diag_result",
+    ],
+)
+
 # ---------------------------------------------------------------------------
 # Mock libraries (testonly)
 # ---------------------------------------------------------------------------
@@ -133,6 +150,17 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "diagnostic_job_collection_mocks",
+    testonly = True,
+    hdrs = ["diagnostic_job_collection_mock.h"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        ":diagnostic_job_collection",
+        "@googletest//:gtest",
+    ],
+)
+
 # ---------------------------------------------------------------------------
 # Unit tests
 # ---------------------------------------------------------------------------
@@ -153,4 +181,16 @@ test_suite(
         ":negative_response_code_test",
     ],
     visibility = ["//score/mw/diag:__pkg__"],
+)
+
+cc_test(
+    name = "diagnostic_services_collection_builder_test",
+    srcs = ["diagnostic_services_collection_builder_test.cpp"],
+    tags = ["unit"],
+    deps = [
+        ":diagnostic_job_collection_mocks",
+        ":diagnostic_services_collection_builder",
+        ":uds_mocks",
+        "@googletest//:gtest_main",
+    ],
 )
