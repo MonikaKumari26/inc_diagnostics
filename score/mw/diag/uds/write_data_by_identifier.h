@@ -36,8 +36,8 @@ class WriteDataByIdentifier
 
     WriteDataByIdentifier(const WriteDataByIdentifier&) = delete;
     WriteDataByIdentifier(WriteDataByIdentifier&&) noexcept = delete;
-    WriteDataByIdentifier& operator=(const WriteDataByIdentifier&) & = delete;
-    WriteDataByIdentifier& operator=(WriteDataByIdentifier&&) & noexcept = delete;
+    WriteDataByIdentifier& operator=(const WriteDataByIdentifier&) = delete;
+    WriteDataByIdentifier& operator=(WriteDataByIdentifier&&) noexcept = delete;
 };
 
 }  // namespace score::mw::diag::uds

@@ -27,21 +27,71 @@ cc_library(
 )
 
 cc_library(
-    name = "uds",
-    hdrs = [
-        "generic_data_identifier.h",
-        "generic_service.h",
-        "read_data_by_identifier.h",
-        "routine_control.h",
-        "write_data_by_identifier.h",
-    ],
-    srcs = ["uds.cpp"],
+    name = "generic_service",
+    hdrs = ["generic_service.h"],
+    srcs = ["generic_service.cpp"],
     visibility = ["//score:__subpackages__"],
     deps = [
-        ":negative_response_code",
+        "//score/mw/diag:byte_types",
+        "//score/mw/diag:diag_result",
+    ],
+)
+
+cc_library(
+    name = "read_data_by_identifier",
+    hdrs = ["read_data_by_identifier.h"],
+    srcs = ["read_data_by_identifier.cpp"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        "//score/mw/diag:byte_types",
+        "//score/mw/diag:diag_result",
+    ],
+)
+
+cc_library(
+    name = "write_data_by_identifier",
+    hdrs = ["write_data_by_identifier.h"],
+    srcs = ["write_data_by_identifier.cpp"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        "//score/mw/diag:byte_types",
+        "//score/mw/diag:diag_result",
+    ],
+)
+
+cc_library(
+    name = "generic_data_identifier",
+    hdrs = ["generic_data_identifier.h"],
+    srcs = ["generic_data_identifier.cpp"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        ":read_data_by_identifier",
+        ":write_data_by_identifier",
+    ],
+)
+
+cc_library(
+    name = "routine_control",
+    hdrs = ["routine_control.h"],
+    srcs = ["routine_control.cpp"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
         "@score_baselibs//score/language/futurecpp",
+    ],
+)
+
+# Umbrella: depends on all individual targets above. Use this when you need
+# the full UDS interface set, or as a migration path from the old monolithic target.
+cc_library(
+    name = "uds",
+    srcs = ["uds.cpp"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        ":generic_data_identifier",
+        ":generic_service",
+        ":routine_control",
     ],
 )
 
@@ -59,6 +109,7 @@ cc_library(
         "routine_control_mock.h",
         "write_data_by_identifier_mock.h",
     ],
+    srcs = ["mocks.cpp"],
     visibility = ["//score:__subpackages__"],
     deps = [
         ":uds",
@@ -85,7 +136,7 @@ cc_test(
     srcs = ["routine_control_test.cpp"],
     tags = ["unit"],
     deps = [
-        ":uds",
+        ":routine_control",
         "@googletest//:gtest_main",
     ],
 )

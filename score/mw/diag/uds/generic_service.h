@@ -44,8 +44,8 @@ class GenericService
 
     GenericService(const GenericService&) = delete;
     GenericService(GenericService&&) noexcept = delete;
-    GenericService& operator=(const GenericService&) & = delete;
-    GenericService& operator=(GenericService&&) & noexcept = delete;
+    GenericService& operator=(const GenericService&) = delete;
+    GenericService& operator=(GenericService&&) noexcept = delete;
 };
 
 }  // namespace score::mw::diag::uds

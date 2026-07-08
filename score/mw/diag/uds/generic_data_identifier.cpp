@@ -11,4 +11,4 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-#include "score/mw/diag/uds/negative_response_code.h"
+#include "score/mw/diag/uds/generic_data_identifier.h"

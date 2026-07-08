@@ -36,8 +36,8 @@ class ReadDataByIdentifier
 
     ReadDataByIdentifier(const ReadDataByIdentifier&) = delete;
     ReadDataByIdentifier(ReadDataByIdentifier&&) noexcept = delete;
-    ReadDataByIdentifier& operator=(const ReadDataByIdentifier&) & = delete;
-    ReadDataByIdentifier& operator=(ReadDataByIdentifier&&) & noexcept = delete;
+    ReadDataByIdentifier& operator=(const ReadDataByIdentifier&) = delete;
+    ReadDataByIdentifier& operator=(ReadDataByIdentifier&&) noexcept = delete;
 };
 
 }  // namespace score::mw::diag::uds

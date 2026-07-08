@@ -42,8 +42,8 @@ class GenericDataIdentifier : public ReadDataByIdentifier, public WriteDataByIde
 
     GenericDataIdentifier(const GenericDataIdentifier&) = delete;
     GenericDataIdentifier(GenericDataIdentifier&&) noexcept = delete;
-    GenericDataIdentifier& operator=(const GenericDataIdentifier&) & = delete;
-    GenericDataIdentifier& operator=(GenericDataIdentifier&&) & noexcept = delete;
+    GenericDataIdentifier& operator=(const GenericDataIdentifier&) = delete;
+    GenericDataIdentifier& operator=(GenericDataIdentifier&&) noexcept = delete;
 };
 // NOLINTEND(fuchsia-multiple-inheritance)
 

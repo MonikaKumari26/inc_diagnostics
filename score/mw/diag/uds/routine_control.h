@@ -79,8 +79,8 @@ class RoutineControl
 
     RoutineControl(const RoutineControl&) = delete;
     RoutineControl(RoutineControl&&) noexcept = delete;
-    RoutineControl& operator=(const RoutineControl&) & = delete;
-    RoutineControl& operator=(RoutineControl&&) & noexcept = delete;
+    RoutineControl& operator=(const RoutineControl&) = delete;
+    RoutineControl& operator=(RoutineControl&&) noexcept = delete;
 };
 
 }  // namespace score::mw::diag::uds
