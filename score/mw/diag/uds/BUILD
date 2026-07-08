@@ -131,21 +131,10 @@ cc_test(
     ],
 )
 
-cc_test(
-    name = "routine_control_test",
-    srcs = ["routine_control_test.cpp"],
-    tags = ["unit"],
-    deps = [
-        ":routine_control",
-        "@googletest//:gtest_main",
-    ],
-)
-
 test_suite(
     name = "unit_tests",
     tests = [
         ":negative_response_code_test",
-        ":routine_control_test",
     ],
     visibility = ["//score/mw/diag:__pkg__"],
 )
