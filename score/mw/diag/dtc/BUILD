@@ -21,6 +21,7 @@ cc_library(
     name = "identifier",
     srcs = ["identifier.cpp"],
     hdrs = ["identifier.h"],
+    visibility = ["//score:__subpackages__"],
     deps = ["@score_baselibs//score/language/futurecpp"],
 )
 
@@ -44,21 +45,14 @@ cc_library(
 )
 
 cc_library(
-    name = "storage_guard",
-    srcs = ["storage_guard.cpp"],
-    hdrs = ["storage_guard.h"],
-    visibility = ["//score:__subpackages__"],
-)
-
-cc_library(
     name = "builder",
     srcs = ["builder.cpp"],
     hdrs = ["builder.h"],
     visibility = ["//score:__subpackages__"],
     deps = [
         ":debounce",
-        ":identifier",
         ":dtc",
+        ":identifier",
     ],
 )
 
@@ -88,16 +82,24 @@ cc_library(
 load("@rules_cc//cc:defs.bzl", "cc_test")
 
 cc_test(
-    name = "unit_test",
+    name = "debounce_test",
     timeout = "short",
-    srcs = [
-        "debounce_test.cpp",
-        "identifier_test.cpp",
-    ],
+    srcs = ["debounce_test.cpp"],
     tags = ["unit"],
     deps = [
         ":debounce",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "identifier_test",
+    timeout = "short",
+    srcs = ["identifier_test.cpp"],
+    tags = ["unit"],
+    deps = [
         ":identifier",
+        "@score_baselibs//score/language/futurecpp:futurecpp_test_support",
         "@googletest//:gtest_main",
     ],
 )
@@ -105,7 +107,8 @@ cc_test(
 test_suite(
     name = "unit_tests",
     tests = [
-        ":unit_test",
+        ":debounce_test",
+        ":identifier_test",
     ],
     visibility = ["//score/mw/diag:__pkg__"],
 )
