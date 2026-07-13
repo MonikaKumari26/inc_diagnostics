@@ -25,11 +25,13 @@
 namespace score::mw::diag::dtc
 {
 
+using score::mw::diag::uds::Result;
+
 /************************************/
 /* FormatType                       */
 /************************************/
 
-/// @brief DTC number format to request via DTC::Number().
+/// @brief DTC number format to request via DTC::GetNumber().
 enum class FormatType : std::uint8_t
 {
     kObd = 0U,    ///< OBD-II (J1979).
@@ -58,6 +60,14 @@ enum class Status : std::uint8_t
     kFailed,  ///< Signal outside healthy range (fault detected).
 };
 
+/// @brief Clearing behaviour for a DTC — passed to DTC::SetClearBehaviour() and Builder::ConfigureClearBehaviour().
+enum class ClearBehaviour : std::uint8_t
+{
+    kClearable,            ///< (Default) Tester may clear this DTC via ClearDiagnosticInformation.
+    kNotClearable,         ///< Tester clear requests are ignored for this DTC.
+    kReenterAfterCleared,  ///< DTC re-enters storage immediately after a tester clear.
+};
+
 /// @brief Abstract interface for reporting fault status on a single DTC.
 class DTC
 {
@@ -67,33 +77,21 @@ class DTC
     /// @return Ok on success; Err if the middleware could not process the report.
     [[nodiscard]] virtual Result<score::cpp::blank> Report(Status status) = 0;
 
-    /// @brief Allow this DTC to be cleared by a tester ClearDiagnosticInformation request (default).
-    virtual void MakeClearable() noexcept = 0;
-
-    /// @brief Prevent this DTC from being cleared by a tester ClearDiagnosticInformation request.
-    virtual void MakeNotClearable() noexcept = 0;
+    /// @brief Set the clearing behaviour for this DTC.
+    /// @param behaviour One of ClearBehaviour::kClearable (default), kNotClearable,
+    ///                  or kReenterAfterCleared.
+    virtual void SetClearBehaviour(ClearBehaviour behaviour) noexcept = 0;
 
     /// @brief Return the DTC number in the requested format.
     /// @param format The numeric format to use (OBD, UDS, or J1939).
     /// @return The DTC number on success; Err if the requested format is unsupported.
-    [[nodiscard]] virtual Result<std::uint32_t> Number(FormatType format) const noexcept = 0;
-
-    /// @brief Instruct the runtime to re-enter this DTC immediately after a tester
-    ///        ClearDiagnosticInformation request.
-    virtual void ReenterAfterCleared() noexcept = 0;
+    [[nodiscard]] virtual Result<std::uint32_t> GetNumber(FormatType format) const noexcept = 0;
 
     /// @brief Register a callback invoked with an InitReason on startup, clear, or re-enable.
     /// @param callback Invoked with the InitReason each time the DTC is (re-)initialised.
     virtual void OnInit(score::cpp::move_only_function<void(InitReason)> callback) = 0;
 
-    DTC(const DTC&) = delete;
-    DTC(DTC&&) noexcept = delete;
-    DTC& operator=(const DTC&) = delete;
-    DTC& operator=(DTC&&) noexcept = delete;
     virtual ~DTC() noexcept = default;
-
-  protected:
-    DTC() = default;
 };
 
 }  // namespace score::mw::diag::dtc

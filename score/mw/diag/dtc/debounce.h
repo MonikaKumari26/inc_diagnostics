@@ -18,6 +18,8 @@
 #define SCORE_MW_DIAG_DTC_DEBOUNCE_H
 
 #include "score/assert.hpp"
+
+#include <chrono>
 #include <cstdint>
 #include <variant>
 
@@ -38,19 +40,19 @@ class Debounce final
     /* Time-based debouncing            */
     /************************************/
 
-    /// @brief Time-based debouncing: fault must persist for @p failed_ms ms to qualify as Failed,
-    ///        or healthy for @p passed_ms ms to qualify as Passed.
+    /// @brief Time-based debouncing: fault must persist for @p failed_duration to qualify as Failed,
+    ///        or healthy for @p passed_duration to qualify as Passed.
     ///        Both values are application-specific and must be set explicitly.
     struct TimeBased
     {
-        std::uint32_t failed_ms;  ///< Continuous fail duration (ms) to qualify as Failed.
-        std::uint32_t passed_ms;  ///< Continuous pass duration (ms) to qualify as Passed.
+        std::chrono::milliseconds failed_duration;  ///< Continuous fail duration to qualify as Failed.
+        std::chrono::milliseconds passed_duration;  ///< Continuous pass duration to qualify as Passed.
 
         /// @brief Returns true if both durations are greater than zero.
-        /// @return true if failed_ms > 0 and passed_ms > 0; false otherwise.
+        /// @return true if failed_duration > 0 and passed_duration > 0; false otherwise.
         [[nodiscard]] constexpr bool IsValid() const noexcept
         {
-            return (failed_ms > 0U) && (passed_ms > 0U);
+            return (failed_duration.count() > 0) && (passed_duration.count() > 0);
         }
     };
 
@@ -62,14 +64,12 @@ class Debounce final
     ///        All thresholds, step sizes and jump values are application-specific and must be set explicitly.
     struct CounterBased
     {
-        std::int16_t
-            failed_threshold;  ///< Counter threshold to qualify as Failed (must be positive).
-        std::int16_t
-            passed_threshold;  ///< Counter threshold to qualify as Passed (must be negative).
-        std::uint16_t failed_stepsize;   ///< Counter increment per Failed report.
-        std::uint16_t passed_stepsize;   ///< Counter decrement per Passed report.
-        std::int16_t failed_jump_value;  ///< Jump value on first Failed (if use_jump_to_failed).
-        std::int16_t passed_jump_value;  ///< Jump value on first Passed (if use_jump_to_passed).
+        std::int16_t    failed_threshold;  ///< Counter threshold to qualify as Failed (must be positive).
+        std::int16_t    passed_threshold;  ///< Counter threshold to qualify as Passed (must be negative).
+        std::uint16_t   failed_stepsize;   ///< Counter increment per Failed report.
+        std::uint16_t   passed_stepsize;   ///< Counter decrement per Passed report.
+        std::int16_t    failed_jump_value;  ///< Jump value on first Failed (if use_jump_to_failed).
+        std::int16_t    passed_jump_value;  ///< Jump value on first Passed (if use_jump_to_passed).
         bool use_jump_to_failed;         ///< Apply jump-to-failed on the first Failed report.
         bool use_jump_to_passed;         ///< Apply jump-to-passed on the first Passed report.
 
@@ -96,26 +96,27 @@ class Debounce final
     /************************************/
 
     /// @brief Default: no debouncing — every Report() call is passed through; IsSet() returns false.
-    constexpr Debounce() = default;
+    constexpr Debounce() noexcept = default;
 
     /// @brief Configure time-based debouncing.
     /// @param timer Time-based algorithm parameters; must satisfy TimeBased::IsValid().
-    // NOLINTNEXTLINE(google-explicit-constructor) — intentional: TimeBased IS a complete Debounce config
-    constexpr Debounce(TimeBased timer) noexcept
-        : algorithm_{timer} {}  // NOLINT(hicpp-explicit-conversions) — same intent as above
+    constexpr Debounce(TimeBased timer) noexcept : algorithm_{std::in_place_type<TimeBased>, timer}
+    {
+    }
 
     /// @brief Configure counter-based debouncing.
     /// @param counter Counter-based algorithm parameters; must satisfy CounterBased::IsValid().
-    // NOLINTNEXTLINE(google-explicit-constructor) — intentional: CounterBased IS a complete Debounce config
     constexpr Debounce(CounterBased counter) noexcept
-        : algorithm_{counter} {}  // NOLINT(hicpp-explicit-conversions) — same intent as above
+        : algorithm_{std::in_place_type<CounterBased>, counter}
+    {
+    }
 
     /************************************/
     /* Queries                          */
     /************************************/
 
     /// @brief Returns true if a debouncing algorithm (TimeBased or CounterBased) has been configured.
-    /// @return true if a TimeBased or CounterBased is active; false if no debouncing (pass-through).
+    /// @return true if a TimeBased or CounterBased is active; false in case of no debouncing (pass-through).
     [[nodiscard]] constexpr bool IsSet() const noexcept
     {
         return !std::holds_alternative<None>(algorithm_);

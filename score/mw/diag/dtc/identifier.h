@@ -31,6 +31,7 @@
 #define SCORE_MW_DIAG_DTC_IDENTIFIER_H
 
 #include "score/assert.hpp"
+
 #include <string>
 #include <string_view>
 
@@ -52,10 +53,10 @@ struct NonEmptyValidator
 };
 
 /************************************/
-/* detail — internal impl           */
+/* internal implementation details  */
 /************************************/
 
-namespace detail
+namespace details
 {
 
 /// @brief Type-safe DTC string identifier.
@@ -79,12 +80,12 @@ template<typename Tag, typename Validator> class Identifier
 
     /// @brief Return the underlying string value.
     /// @return The identifier string passed at construction.
-    [[nodiscard]] std::string_view GetValue() const noexcept { return value_; }
+    [[nodiscard]] constexpr std::string_view GetValue() const noexcept { return value_; }
 
     /// @brief Returns true if both identifiers hold the same string value.
     /// @param other The identifier to compare against.
     /// @return true if both hold the same string value.
-    [[nodiscard]] bool operator==(const Identifier& other) const noexcept
+    [[nodiscard]] constexpr bool operator==(const Identifier& other) const noexcept
     {
         return value_ == other.value_;
     }
@@ -92,7 +93,7 @@ template<typename Tag, typename Validator> class Identifier
     /// @brief Returns true if the identifiers hold different string values.
     /// @param other The identifier to compare against.
     /// @return true if the string values differ.
-    [[nodiscard]] bool operator!=(const Identifier& other) const noexcept
+    [[nodiscard]] constexpr bool operator!=(const Identifier& other) const noexcept
     {
         return !(*this == other);
     }
@@ -100,7 +101,7 @@ template<typename Tag, typename Validator> class Identifier
     /// @brief Lexicographic ordering — enables use in std::map and std::set.
     /// @param other The identifier to compare against.
     /// @return true if this identifier is lexicographically less than @p other.
-    [[nodiscard]] bool operator<(const Identifier& other) const noexcept
+    [[nodiscard]] constexpr bool operator<(const Identifier& other) const noexcept
     {
         return value_ < other.value_;
     }
@@ -113,20 +114,20 @@ struct Monitor;    ///< Phantom tag for MonitorIdentifier.
 struct Event;      ///< Phantom tag for EventIdentifier.
 struct Condition;  ///< Phantom tag for ConditionIdentifier.
 
-}  // namespace detail
+}  // namespace details
 
 /************************************/
 /* Public type aliases              */
 /************************************/
 
 /// @brief Strong type for a DTC monitor identifier (e.g. "mon/voltage_sensor").
-using MonitorIdentifier = detail::Identifier<detail::Monitor, NonEmptyValidator>;
+using MonitorIdentifier = details::Identifier<details::Monitor, NonEmptyValidator>;
 
 /// @brief Strong type for a DTC event identifier (e.g. "evt/voltage_out_of_range").
-using EventIdentifier = detail::Identifier<detail::Event, NonEmptyValidator>;
+using EventIdentifier = details::Identifier<details::Event, NonEmptyValidator>;
 
 /// @brief Strong type for a DTC clear condition identifier (e.g. "cond/ignition_on").
-using ConditionIdentifier = detail::Identifier<detail::Condition, NonEmptyValidator>;
+using ConditionIdentifier = details::Identifier<details::Condition, NonEmptyValidator>;
 
 }  // namespace score::mw::diag::dtc
 

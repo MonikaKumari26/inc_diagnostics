@@ -73,9 +73,6 @@ class SimpleWriteDataByIdentifier : public WriteDataByIdentifier
         std::promise<Result<void>> promise;
         promise.set_value(Write(input, meta_data));
         return promise.get_future();
-        std::promise<Result<score::cpp::blank>> promise;
-        promise.set_value(Write(input));
-        return promise.get_future();
     }
 };
 

@@ -30,17 +30,20 @@ namespace
 
 TEST(TimeBasedTest, IsValidReturnsTrueForPositiveDurations)
 {
-    EXPECT_TRUE((Debounce::TimeBased{200U, 100U}.IsValid()));
+    EXPECT_TRUE((Debounce::TimeBased{std::chrono::milliseconds{200}, std::chrono::milliseconds{100}}
+                     .IsValid()));
 }
 
 TEST(TimeBasedTest, IsValidReturnsFalseWhenFailedMsIsZero)
 {
-    EXPECT_FALSE((Debounce::TimeBased{0U, 100U}.IsValid()));
+    EXPECT_FALSE((Debounce::TimeBased{std::chrono::milliseconds{0}, std::chrono::milliseconds{100}}
+                      .IsValid()));
 }
 
 TEST(TimeBasedTest, IsValidReturnsFalseWhenPassedMsIsZero)
 {
-    EXPECT_FALSE((Debounce::TimeBased{200U, 0U}.IsValid()));
+    EXPECT_FALSE((Debounce::TimeBased{std::chrono::milliseconds{200}, std::chrono::milliseconds{0}}
+                      .IsValid()));
 }
 
 // ---------------------------------------------------------------------------
@@ -78,11 +81,12 @@ TEST(CounterBasedTest, IsValidReturnsFalseWhenPassedStepsizeIsZero)
 
 TEST(DebounceTest, GetAlgorithmHoldsTimeBasedWhenConstructedWithTimeBased)
 {
-    const Debounce d{Debounce::TimeBased{200U, 100U}};
+    const Debounce d{
+        Debounce::TimeBased{std::chrono::milliseconds{200}, std::chrono::milliseconds{100}}};
     ASSERT_TRUE(std::holds_alternative<Debounce::TimeBased>(d.GetAlgorithm()));
     const auto& t = std::get<Debounce::TimeBased>(d.GetAlgorithm());
-    EXPECT_EQ(t.failed_ms, 200U);
-    EXPECT_EQ(t.passed_ms, 100U);
+    EXPECT_EQ(t.failed_duration, std::chrono::milliseconds{200});
+    EXPECT_EQ(t.passed_duration, std::chrono::milliseconds{100});
 }
 
 TEST(DebounceTest, GetAlgorithmHoldsCounterBasedWhenConstructedWithCounterBased)
@@ -101,9 +105,9 @@ TEST(DebounceTest, GetAlgorithmHoldsCounterBasedWhenConstructedWithCounterBased)
     EXPECT_FALSE(c.use_jump_to_passed);
 }
 
-TEST(DebounceTest, GetAlgorithmHoldsMonostateWhenDefault)
+TEST(DebounceTest, GetAlgorithmHoldsNoneWhenDefault)
 {
-    EXPECT_TRUE(std::holds_alternative<std::monostate>(Debounce{}.GetAlgorithm()));
+    EXPECT_TRUE(std::holds_alternative<Debounce::None>(Debounce{}.GetAlgorithm()));
 }
 
 }  // namespace

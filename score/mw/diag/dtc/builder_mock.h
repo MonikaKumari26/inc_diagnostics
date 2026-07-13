@@ -33,14 +33,12 @@ class BuilderMock : public Builder
     ///        Build() and do not need an explicit ON_CALL / EXPECT_CALL themselves.
     BuilderMock();
 
-    // NOLINTBEGIN(readability-identifier-naming) -- MOCK_METHOD is a gmock macro, not a method name
     MOCK_METHOD(BuilderMock&, WithMonitor, (MonitorIdentifier monitor), (override));
     MOCK_METHOD(BuilderMock&, WithEvent, (EventIdentifier event), (override));
     MOCK_METHOD(BuilderMock&, WithClearCondition, (ConditionIdentifier condition), (override));
     MOCK_METHOD(BuilderMock&, ConfigureClearBehaviour, (ClearBehaviour behaviour), (override));
     MOCK_METHOD(BuilderMock&, ConfigureDebouncing, (Debounce debouncing), (override));
     MOCK_METHOD((std::unique_ptr<DTC>), Build, (), (override));
-    // NOLINTEND(readability-identifier-naming)
 };
 
 }  // namespace score::mw::diag::dtc::test

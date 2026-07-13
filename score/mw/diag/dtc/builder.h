@@ -24,7 +24,7 @@
 ///       .WithEvent(EventIdentifier{"evt/example"})
 ///       .WithClearCondition(ConditionIdentifier{"cond/example"})
 ///       .ConfigureClearBehaviour(ClearBehaviour::kNotClearable)
-///       .ConfigureDebouncing(Debounce::TimeBased{200U, 100U})  // Debounce::TimeBased implicitly converts to Debounce
+///       .ConfigureDebouncing(Debounce::TimeBased{std::chrono::milliseconds{200}, std::chrono::milliseconds{100}})
 ///       .Build();
 /// @endcode
 
@@ -40,19 +40,10 @@
 namespace score::mw::diag::dtc
 {
 
-/// @brief Selects the clearing behaviour of a DTC — passed to Builder::ConfigureClearBehaviour().
-///        The three options are mutually exclusive by construction: only one value can be passed.
-enum class ClearBehaviour : std::uint8_t
-{
-    kClearable,            ///< (Default) Tester may clear this DTC via ClearDiagnosticInformation.
-    kNotClearable,         ///< Tester clear requests are ignored for this DTC.
-    kReenterAfterCleared,  ///< DTC re-enters storage immediately after a tester clear.
-};
-
 /// @brief Abstract builder interface for constructing fully-configured DTC instances.
 /// @note At most one debouncing algorithm may be configured per DTC.
 ///       A second call to ConfigureDebouncing() overwrites the first.
-///       If ConfigureDebouncing() is never called, every Report() call is passed through.
+///       If ConfigureDebouncing() is never called, every Report() call to a DTC will get passed through.
 class Builder
 {
   public:
@@ -85,14 +76,7 @@ class Builder
     /// @return Owning pointer to the configured DTC instance; never null when all preconditions are met.
     [[nodiscard]] virtual std::unique_ptr<DTC> Build() = 0;
 
-    Builder(const Builder&) = delete;
-    Builder(Builder&&) noexcept = delete;
-    Builder& operator=(const Builder&) = delete;
-    Builder& operator=(Builder&&) noexcept = delete;
     virtual ~Builder() noexcept = default;
-
-  protected:
-    Builder() = default;
 };
 
 }  // namespace score::mw::diag::dtc
