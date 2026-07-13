@@ -12,25 +12,25 @@
  ********************************************************************************/
 
 /// @file serialization.h
-/// @brief UDS binary serialization interfaces and typed adapter templates.
+/// @brief UDS typed serialization adapter templates.
 ///
-/// Abstract bases: `Serializable` (serialize to bytes), `WriteHandler<T>` (typed write
-/// callback), `RoutineHandler<T>` (typed routine callback with default SubFunctionNotSupported).
+/// Includes `serialization_base.h` (abstract bases `Serializable`, `WriteHandler<T>`,
+/// `RoutineHandler<T>`) and adds the concrete adapter templates:
+///   - `SerializedReadDataByIdentifier<T>`       — read-only DID (Service 0x22)
+///   - `SerializedWriteDataByIdentifier<T,H>`    — write-only DID (Service 0x2E)
+///   - `SerializedGenericDataIdentifier<T,H>`    — combined read+write DID (0x22 + 0x2E)
+///   - `SerializedRoutineControl<T,H>`           — RoutineControl adapter (Service 0x31)
 ///
-/// Template adapters: `SerializedReadDataByIdentifier<T>`, `SerializedWriteDataByIdentifier<T,H>`,
-/// `SerializedRoutineControl<T,H>` — each wraps the corresponding UDS interface and handles
-/// serialization/deserialization internally.
+/// Free helper: `DeserializeRequest<T>(ByteView, Callable)`.
 ///
-/// Deserialization contract: `T` must provide
-/// `static Result<T> from_bytes(ByteView data);`
-///
-/// Free helper: `deserialize_request<T>(ByteView, Callable)`.
+/// Implementors of handler interfaces only need `serialization_base.h`.
 
 #ifndef SCORE_MW_DIAG_UDS_SERIALIZATION_H
 #define SCORE_MW_DIAG_UDS_SERIALIZATION_H
 
-#include "score/mw/diag/byte_types.h"
-#include "score/mw/diag/diag_result.h"
+#include "score/mw/diag/uds/serialization_base.h"
+
+#include "score/mw/diag/uds/generic_data_identifier.h"
 #include "score/mw/diag/uds/read_data_by_identifier.h"
 #include "score/mw/diag/uds/routine_control.h"
 #include "score/mw/diag/uds/write_data_by_identifier.h"
@@ -42,129 +42,17 @@ namespace score::mw::diag::uds
 {
 
 /************************************/
-/* Serializable                     */
-/************************************/
-
-/// Abstract base for types that can encode themselves into a raw UDS byte payload.
-///
-/// Derive from this and implement `serialize()`. The `from_bytes()` static factory
-/// is required by the `Serialized*` adapters that use the type as a `DataPayload`.
-///
-/// @code
-/// class VehicleSpeed : public Serializable {
-/// public:
-///     Result<ByteVector> serialize() const override { /* encode value_ */ }
-///     static Result<VehicleSpeed> from_bytes(ByteView data) { /* decode or return NRC */ }
-/// private:
-///     std::uint16_t value_;
-/// };
-/// @endcode
-class Serializable
-{
-  public:
-    /// Encode this object into a UDS byte payload.
-    /// @return Ok(ByteVector) on success, Err(NegativeResponseCode) on serialization failure.
-    virtual Result<ByteVector> serialize() const = 0;
-
-    virtual ~Serializable() noexcept = default;
-
-  protected:
-    Serializable() = default;
-    Serializable(const Serializable&) = default;
-    Serializable(Serializable&&) noexcept = default;
-    Serializable& operator=(const Serializable&) & = default;
-    Serializable& operator=(Serializable&&) & noexcept = default;
-};
-
-/************************************/
-/* WriteHandler<T>                  */
-/************************************/
-
-/// Abstract callback for processing a typed, already-deserialized write value.
-///
-/// Implement this and pass it to `SerializedWriteDataByIdentifier<DataPayload, HandlerImpl>`.
-template <typename DataPayload>
-class WriteHandler
-{
-  public:
-    /// Process the deserialized write value.
-    /// @param value  Typed value obtained from DataPayload::from_bytes(raw_input).
-    /// @return ResultBlank — Ok on success, Err(NegativeResponseCode) on failure.
-    virtual ResultBlank handle_write(DataPayload value) = 0;
-
-    virtual ~WriteHandler() noexcept = default;
-
-  protected:
-    WriteHandler() = default;
-    WriteHandler(const WriteHandler&) = default;
-    WriteHandler(WriteHandler&&) noexcept = default;
-    WriteHandler& operator=(const WriteHandler&) & = default;
-    WriteHandler& operator=(WriteHandler&&) & noexcept = default;
-};
-
-/************************************/
-/* RoutineHandler<T>                */
-/************************************/
-
-/// Abstract callback for typed routine execution.
-///
-/// Implement this and pass it to `SerializedRoutineControl<DataPayload, HandlerImpl>`.
-/// Override only the sub-functions the routine handles; unoverridden methods return
-/// `SubFunctionNotSupported` by default.
-template <typename DataPayload>
-class RoutineHandler
-{
-  public:
-    /// Start the routine with optional typed parameters.
-    /// @return Ok(Some(DataPayload)) to include a typed start reply,
-    ///         Ok(None)             for no start reply,
-    ///         Err with SubFunctionNotSupported if start is not supported (default).
-    virtual Result<std::optional<DataPayload>> start(std::optional<DataPayload> /*params*/)
-    {
-        return Result<std::optional<DataPayload>>{score::unexpect, NegativeResponseCode::SubFunctionNotSupported};
-    }
-
-    /// Stop the routine with optional typed parameters.
-    /// @return Ok(Some(DataPayload)) for a typed stop reply,
-    ///         Ok(None)             for no stop reply,
-    ///         Err with SubFunctionNotSupported if stop is not supported (default).
-    virtual Result<std::optional<DataPayload>> stop(std::optional<DataPayload> /*params*/)
-    {
-        return Result<std::optional<DataPayload>>{score::unexpect, NegativeResponseCode::SubFunctionNotSupported};
-    }
-
-    /// Retrieve the current or final results of the routine.
-    /// @return Ok(Some(DataPayload)) when results are available,
-    ///         Ok(None)             while the routine is still running,
-    ///         Err with SubFunctionNotSupported if results polling is not supported (default).
-    virtual Result<std::optional<DataPayload>> results() const
-    {
-        return Result<std::optional<DataPayload>>{score::unexpect, NegativeResponseCode::SubFunctionNotSupported};
-    }
-
-    /// Current completion percentage [0, 100], or nullopt if unavailable.
-    virtual std::optional<std::uint8_t> completion_percentage() const noexcept
-    {
-        return std::nullopt;
-    }
-
-    virtual ~RoutineHandler() noexcept = default;
-
-  protected:
-    RoutineHandler() = default;
-    RoutineHandler(const RoutineHandler&) = default;
-    RoutineHandler(RoutineHandler&&) noexcept = default;
-    RoutineHandler& operator=(const RoutineHandler&) & = default;
-    RoutineHandler& operator=(RoutineHandler&&) & noexcept = default;
-};
-
-/************************************/
 /* SerializedReadDataByIdentifier<T>*/
 /************************************/
 
 /// Adapts a `Serializable` `DataPayload` to the `ReadDataByIdentifier` interface.
-/// Owns the value and returns `DataPayload::serialize()` on each `Read()` call.
+/// Owns the value and returns `DataPayload::Serialize()` on each `Read()` call.
 /// `DataPayload` must derive from `Serializable`.
+///
+/// @note The adapter stores a **snapshot** of the value provided at construction time.
+///       Every `Read()` call serializes the same stored instance. If the diagnostic
+///       data must reflect live/changing state, implement `ReadDataByIdentifier` directly
+///       and call your data source inside `Read()` instead of using this adapter.
 template <typename DataPayload>
 class SerializedReadDataByIdentifier final : public ReadDataByIdentifier
 {
@@ -178,12 +66,14 @@ class SerializedReadDataByIdentifier final : public ReadDataByIdentifier
     {
     }
 
-    [[nodiscard]] ResultWithData Read() override
-    {
-        return serializable_value_.serialize();
-    }
+    [[nodiscard]] Result<ByteVector> Read() override { return serializable_value_.Serialize(); }
 
     ~SerializedReadDataByIdentifier() noexcept override = default;
+
+    SerializedReadDataByIdentifier(const SerializedReadDataByIdentifier&) = delete;
+    SerializedReadDataByIdentifier(SerializedReadDataByIdentifier&&) noexcept = delete;
+    SerializedReadDataByIdentifier& operator=(const SerializedReadDataByIdentifier&) = delete;
+    SerializedReadDataByIdentifier& operator=(SerializedReadDataByIdentifier&&) noexcept = delete;
 
   private:
     DataPayload serializable_value_;
@@ -196,38 +86,117 @@ class SerializedReadDataByIdentifier final : public ReadDataByIdentifier
 
 /// Adapts a `WriteHandler<DataPayload>` to the `WriteDataByIdentifier` interface.
 ///
-/// On `Write(input)`: calls `DataPayload::from_bytes(input)`, then on success
-/// calls `HandlerImpl::handle_write(typed_value)`.
+/// On `Write(input)`: calls `DataPayload::FromBytes(input)`, then on success
+/// calls `HandlerImpl::HandleWrite(typedValue)`.
 ///
-/// Requires: `DataPayload::from_bytes(ByteView)` static factory;
+/// @note `DataPayload` does **not** need to derive from `Serializable` — write-only DIDs
+///       only require `FromBytes()` for deserialization; `Serialize()` is never called.
+///
+/// Requires: `DataPayload::FromBytes(ByteView)` → `Result<DataPayload>` static factory;
 ///           `HandlerImpl` must derive from `WriteHandler<DataPayload>`.
 template <typename DataPayload, typename HandlerImpl>
 class SerializedWriteDataByIdentifier final : public WriteDataByIdentifier
 {
     static_assert(std::is_base_of_v<WriteHandler<DataPayload>, HandlerImpl>,
                   "HandlerImpl must derive from score::mw::diag::uds::WriteHandler<DataPayload>");
+    static_assert(detail::HasFromBytesFactory<DataPayload>::value,
+                  "DataPayload must provide a static FromBytes(ByteView) factory");
 
   public:
-    explicit SerializedWriteDataByIdentifier(HandlerImpl handler) noexcept(
+    explicit SerializedWriteDataByIdentifier(HandlerImpl write_handler) noexcept(
         std::is_nothrow_move_constructible_v<HandlerImpl>)
-        : handler_{std::move(handler)}
+        : handler_{std::move(write_handler)}
     {
     }
 
-    [[nodiscard]] ResultBlank Write(ByteView input) override
+    [[nodiscard]] Result<score::cpp::blank> Write(ByteView input) override
     {
-        auto parse_result = DataPayload::from_bytes(input);
-        if (!parse_result.has_value())
+        auto parsed_payload = DataPayload::FromBytes(input);
+
+        if (!parsed_payload.has_value())
         {
-            return ResultBlank{score::unexpect, parse_result.error()};
+            return Result<score::cpp::blank>(score::cpp::make_unexpected(NegativeResponseCode::IncorrectMessageLengthOrInvalidFormat));
         }
-        return handler_.handle_write(std::move(*parse_result));
+
+        return handler_.HandleWrite(std::move(*parsed_payload));
     }
 
     ~SerializedWriteDataByIdentifier() noexcept override = default;
 
+    SerializedWriteDataByIdentifier(const SerializedWriteDataByIdentifier&) = delete;
+    SerializedWriteDataByIdentifier(SerializedWriteDataByIdentifier&&) noexcept = delete;
+    SerializedWriteDataByIdentifier& operator=(const SerializedWriteDataByIdentifier&) = delete;
+    SerializedWriteDataByIdentifier& operator=(SerializedWriteDataByIdentifier&&) noexcept = delete;
+
   private:
     HandlerImpl handler_;
+};
+
+/*************************************/
+/* SerializedGenericDataIdentifier   */
+/* <DataPayload, HandlerImpl>        */
+/*************************************/
+
+/// Adapts a `Serializable` `DataPayload` and a `WriteHandler<DataPayload>` to the
+/// `GenericDataIdentifier` interface, covering both UDS Service 0x22 (read) and
+/// Service 0x2E (write) through a single typed adapter.
+///
+/// On `Read()`:        returns `DataPayload::Serialize()` of the owned value.
+/// On `Write(input)`:  calls `DataPayload::FromBytes(input)`, then on success
+///                     calls `WriteHandlerImpl::HandleWrite(typedValue)`.
+///
+/// @note Holds a **snapshot** (see `SerializedReadDataByIdentifier`). `Write()` does **not**
+///       update the stored readable value — written data is delivered to `HandleWrite()` only.
+///       To have `Read()` reflect written data, implement `GenericDataIdentifier` directly.
+///
+/// Requires: `DataPayload` derives from `Serializable` and provides `FromBytes(ByteView)`;
+///           `WriteHandlerImpl` derives from `WriteHandler<DataPayload>`.
+template <typename DataPayload, typename WriteHandlerImpl>
+class SerializedGenericDataIdentifier final : public GenericDataIdentifier
+{
+    static_assert(std::is_base_of_v<Serializable, DataPayload>,
+                  "DataPayload must derive from score::mw::diag::uds::Serializable");
+    static_assert(detail::HasFromBytesFactory<DataPayload>::value,
+                  "DataPayload must provide a static FromBytes(ByteView) factory");
+    static_assert(std::is_base_of_v<WriteHandler<DataPayload>, WriteHandlerImpl>,
+                  "WriteHandlerImpl must derive from score::mw::diag::uds::WriteHandler<DataPayload>");
+
+  public:
+    /// @param value         Initial readable value; returned by Read() after serialization.
+    /// @param write_handler Handler invoked with the deserialized value on each Write() call.
+    explicit SerializedGenericDataIdentifier(
+        DataPayload read_value,
+        WriteHandlerImpl write_handler) noexcept(std::is_nothrow_move_constructible_v<DataPayload> &&
+                                                 std::is_nothrow_move_constructible_v<WriteHandlerImpl>)
+        : serializable_value_{std::move(read_value)}, handler_{std::move(write_handler)}
+    {
+    }
+
+    [[nodiscard]] Result<ByteVector> Read() override { return serializable_value_.Serialize(); }
+
+    [[nodiscard]] Result<score::cpp::blank> Write(ByteView input) override
+    {
+        auto parsed_payload = DataPayload::FromBytes(input);
+
+        if (!parsed_payload.has_value())
+        {
+            return Result<score::cpp::blank>(
+                score::cpp::make_unexpected(NegativeResponseCode::IncorrectMessageLengthOrInvalidFormat));
+        }
+
+        return handler_.HandleWrite(std::move(*parsed_payload));
+    }
+
+    ~SerializedGenericDataIdentifier() noexcept override = default;
+
+    SerializedGenericDataIdentifier(const SerializedGenericDataIdentifier&) = delete;
+    SerializedGenericDataIdentifier(SerializedGenericDataIdentifier&&) noexcept = delete;
+    SerializedGenericDataIdentifier& operator=(const SerializedGenericDataIdentifier&) = delete;
+    SerializedGenericDataIdentifier& operator=(SerializedGenericDataIdentifier&&) noexcept = delete;
+
+  private:
+    DataPayload serializable_value_;
+    WriteHandlerImpl handler_;
 };
 
 /*************************************/
@@ -237,124 +206,122 @@ class SerializedWriteDataByIdentifier final : public WriteDataByIdentifier
 
 /// Adapts a `RoutineHandler<DataPayload>` to the `RoutineControl` interface.
 ///
-/// `Start(input)`: deserializes optional bytes → calls `HandlerImpl::start()` → serializes
-/// typed reply into `StartRoutine::reply`; sets `result_provider` to poll `HandlerImpl::results()`.
+/// `Start(input)`: empty input → passes `nullopt` to the handler; non-empty input →
+///   deserializes via `DataPayload::FromBytes()`. Calls `HandlerImpl::Start()`, then
+///   serializes the typed reply into a `ByteVector` (empty `ByteVector` if no reply).
 ///
-/// `Stop(input)`: deserializes optional bytes → calls `HandlerImpl::stop()` → serializes reply.
+/// `Stop(input)`: same deserialization pattern → calls `HandlerImpl::Stop()` → serializes reply.
 ///
-/// Requires: `DataPayload` derives from `Serializable` and provides `from_bytes(ByteView)`;
+/// Requires: `DataPayload` derives from `Serializable` and provides `FromBytes(ByteView)`;
 ///           `HandlerImpl` derives from `RoutineHandler<DataPayload>`.
-///
-/// @note `result_provider` in the returned `StartRoutine` captures `this`. The owning
-///       `DiagnosticServicesCollection` MUST outlive the invocation of `result_provider`.
 template <typename DataPayload, typename HandlerImpl>
 class SerializedRoutineControl final : public RoutineControl
 {
     static_assert(std::is_base_of_v<Serializable, DataPayload>,
                   "DataPayload must derive from score::mw::diag::uds::Serializable");
+    static_assert(detail::HasFromBytesFactory<DataPayload>::value,
+                  "DataPayload must provide a static FromBytes(ByteView) factory");
     static_assert(std::is_base_of_v<RoutineHandler<DataPayload>, HandlerImpl>,
                   "HandlerImpl must derive from score::mw::diag::uds::RoutineHandler<DataPayload>");
 
   public:
-    explicit SerializedRoutineControl(HandlerImpl handler) noexcept(
+    explicit SerializedRoutineControl(HandlerImpl routine_handler) noexcept(
         std::is_nothrow_move_constructible_v<HandlerImpl>)
-        : handler_{std::move(handler)}
+        : handler_{std::move(routine_handler)}
     {
     }
 
-    [[nodiscard]] StartResult Start(std::optional<ByteView> input) override
+    [[nodiscard]] Result<ByteVector> Start(ByteView input) override
     {
-        std::optional<DataPayload> deserialized_params;
-        if (input.has_value())
+        auto deserialized_params = DeserializeOptionalInput(input);
+        if (!deserialized_params.has_value())
         {
-            auto parse_result = DataPayload::from_bytes(*input);
-            if (!parse_result.has_value())
-            {
-                return StartResult{score::unexpect, parse_result.error()};
-            }
-            deserialized_params = std::move(*parse_result);
+            return Result<ByteVector>(score::cpp::make_unexpected(deserialized_params.error()));
         }
 
-        auto start_result = handler_.start(std::move(deserialized_params));
-        if (!start_result.has_value())
+        auto start_outcome = handler_.Start(std::move(*deserialized_params));
+
+        if (!start_outcome.has_value())
         {
-            return StartResult{score::unexpect, start_result.error()};
+            return Result<ByteVector>(score::cpp::make_unexpected(start_outcome.error()));
         }
 
-        StartRoutine start_routine{};
-
-        // Serialize the optional typed start reply into raw bytes.
-        if (start_result->has_value())
+        if (!start_outcome->has_value())
         {
-            auto serialized_reply = (*start_result)->serialize();
-            if (!serialized_reply.has_value())
-            {
-                return StartResult{score::unexpect, serialized_reply.error()};
-            }
-            start_routine.reply = std::move(*serialized_reply);
+            return ByteVector{};
         }
 
-        // result_provider polls HandlerImpl::results(). Precondition: *this must outlive the callable.
-        start_routine.result_provider = [this]() -> StopResult {
-            auto routine_result = handler_.results();
-            if (!routine_result.has_value())
-            {
-                return StopResult{score::unexpect, routine_result.error()};
-            }
-            if (!routine_result->has_value())
-            {
-                return std::optional<ByteVector>{std::nullopt};
-            }
-            auto serialized_result = (*routine_result)->serialize();
-            if (!serialized_result.has_value())
-            {
-                return StopResult{score::unexpect, serialized_result.error()};
-            }
-            return std::optional<ByteVector>{std::move(*serialized_result)};
-        };
+        auto serialized_reply = start_outcome->value().Serialize();
 
-        return start_routine;
-    }
-
-    [[nodiscard]] StopResult Stop(std::optional<ByteView> input) override
-    {
-        std::optional<DataPayload> deserialized_params;
-        if (input.has_value())
-        {
-            auto parse_result = DataPayload::from_bytes(*input);
-            if (!parse_result.has_value())
-            {
-                return StopResult{score::unexpect, parse_result.error()};
-            }
-            deserialized_params = std::move(*parse_result);
-        }
-
-        auto stop_result = handler_.stop(std::move(deserialized_params));
-        if (!stop_result.has_value())
-        {
-            return StopResult{score::unexpect, stop_result.error()};
-        }
-        if (!stop_result->has_value())
-        {
-            return std::optional<ByteVector>{std::nullopt};
-        }
-
-        auto serialized_reply = (*stop_result)->serialize();
         if (!serialized_reply.has_value())
         {
-            return StopResult{score::unexpect, serialized_reply.error()};
+            return Result<ByteVector>(score::cpp::make_unexpected(NegativeResponseCode::FailurePreventsExecutionOfRequestedAction));
         }
-        return std::optional<ByteVector>{std::move(*serialized_reply)};
+
+        return std::move(*serialized_reply);
+    }
+
+    [[nodiscard]] Result<ByteVector> Stop(ByteView input) override
+    {
+        auto deserialized_params = DeserializeOptionalInput(input);
+        if (!deserialized_params.has_value())
+        {
+            return Result<ByteVector>(score::cpp::make_unexpected(deserialized_params.error()));
+        }
+
+        auto stop_outcome = handler_.Stop(std::move(*deserialized_params));
+
+        if (!stop_outcome.has_value())
+        {
+            return Result<ByteVector>(score::cpp::make_unexpected(stop_outcome.error()));
+        }
+
+        if (!stop_outcome->has_value())
+        {
+            return ByteVector{};
+        }
+
+        auto serialized_reply = stop_outcome->value().Serialize();
+
+        if (!serialized_reply.has_value())
+        {
+            return Result<ByteVector>(score::cpp::make_unexpected(NegativeResponseCode::FailurePreventsExecutionOfRequestedAction));
+        }
+
+        return std::move(*serialized_reply);
     }
 
     [[nodiscard]] std::optional<std::uint8_t> CompletionPercentage() const noexcept override
     {
-        return handler_.completion_percentage();
+        return handler_.CompletionPercentage();
     }
 
     ~SerializedRoutineControl() noexcept override = default;
 
+    SerializedRoutineControl(const SerializedRoutineControl&) = delete;
+    SerializedRoutineControl(SerializedRoutineControl&&) noexcept = delete;
+    SerializedRoutineControl& operator=(const SerializedRoutineControl&) = delete;
+    SerializedRoutineControl& operator=(SerializedRoutineControl&&) noexcept = delete;
+
   private:
+    /// Deserialize a raw input into an optional typed DataPayload.
+    /// Returns Ok(nullopt) when input is empty (no parameters sent),
+    /// Ok(value) on successful parse, or Err(IncorrectMessageLengthOrInvalidFormat) on parse failure.
+    [[nodiscard]] static Result<std::optional<DataPayload>>
+    DeserializeOptionalInput(ByteView input)
+    {
+        if (input.empty())
+        {
+            return std::optional<DataPayload>{std::nullopt};
+        }
+        auto parsed = DataPayload::FromBytes(input);
+        if (!parsed.has_value())
+        {
+            return Result<std::optional<DataPayload>>(score::cpp::make_unexpected(NegativeResponseCode::IncorrectMessageLengthOrInvalidFormat));
+        }
+        return std::optional<DataPayload>{std::move(*parsed)};
+    }
+
     HandlerImpl handler_;
 };
 
@@ -362,20 +329,24 @@ class SerializedRoutineControl final : public RoutineControl
 /* Free-function helper             */
 /************************************/
 
-/// Deserialize `data` into `RequestPayload` via `RequestPayload::from_bytes()`, then
-/// invoke `handler(typed_value)`. Any parse failure is normalized to
+/// Deserialize `data` into `RequestPayload` via `RequestPayload::FromBytes()`, then
+/// invoke `handler(typedValue)`. Any parse failure is normalized to
 /// `IncorrectMessageLengthOrInvalidFormat` before being returned.
-/// `Callable` must accept `RequestPayload` and return `ResultBlank`.
+/// `Callable` must accept `RequestPayload` and return `Result<score::cpp::blank>`.
 template <typename RequestPayload, typename Callable>
-ResultBlank deserialize_request(ByteView data, Callable&& handler)
+Result<score::cpp::blank> DeserializeRequest(ByteView data, Callable&& on_parsed)
 {
-    auto parse_result = RequestPayload::from_bytes(data);
-    if (!parse_result.has_value())
+    static_assert(detail::HasFromBytesFactory<RequestPayload>::value,
+                  "RequestPayload must provide a static FromBytes(ByteView) factory");
+    auto parsed_request = RequestPayload::FromBytes(data);
+
+    if (!parsed_request.has_value())
     {
         // Normalize any parse error to the correct UDS wire-level NRC.
-        return ResultBlank{score::unexpect, NegativeResponseCode::IncorrectMessageLengthOrInvalidFormat};
+        return Result<score::cpp::blank>(score::cpp::make_unexpected(NegativeResponseCode::IncorrectMessageLengthOrInvalidFormat));
     }
-    return std::forward<Callable>(handler)(std::move(*parse_result));
+
+    return std::forward<Callable>(on_parsed)(std::move(*parsed_request));
 }
 
 }  // namespace score::mw::diag::uds
