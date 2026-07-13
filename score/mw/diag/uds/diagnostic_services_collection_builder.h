@@ -14,30 +14,9 @@
 /// @file diagnostic_services_collection_builder.h
 /// @brief DiagnosticServicesCollectionBuilder and DiagnosticServicesCollection for
 ///        bundling UDS diagnostic service handlers before runtime registration.
-///
-/// ### DiagnosticServicesCollection
-/// A concrete subclass of DiagnosticJobCollection that owns a set of
-/// ReadDataByIdentifier, WriteDataByIdentifier, GenericDataIdentifier and
-/// RoutineControl implementations keyed by string service IDs.  Accessors allow
-/// the runtime (or a ServiceRegistrar adapter) to retrieve individual handlers.
-///
-/// ### DiagnosticServicesCollectionBuilder
-/// A fluent builder that accumulates handlers and produces a validated
-/// DiagnosticServicesCollection via build().
-///
-/// ### Typical usage
-/// @code
-///   DiagnosticServicesCollectionBuilder builder;
-///   builder.with_read_did("F190", std::make_unique<VinDid>())
-///          .with_routine("0301", std::make_unique<EraseRoutine>());
-///   auto result = builder.build();
-///   if (result.has_value()) {
-///       // pass *result to the runtime ServiceRegistrar
-///   }
-/// @endcode
 
-#ifndef SCORE_MW_DIAG_DIAGNOSTIC_SERVICES_COLLECTION_BUILDER_H
-#define SCORE_MW_DIAG_DIAGNOSTIC_SERVICES_COLLECTION_BUILDER_H
+#ifndef SCORE_MW_DIAG_UDS_DIAGNOSTIC_SERVICES_COLLECTION_BUILDER_H
+#define SCORE_MW_DIAG_UDS_DIAGNOSTIC_SERVICES_COLLECTION_BUILDER_H
 
 #include "score/mw/diag/diag_result.h"
 #include "score/mw/diag/uds/diagnostic_job_collection.h"
@@ -57,25 +36,33 @@
 namespace score::mw::diag::uds
 {
 
-/// String-view alias used as the service identifier type in builder methods.
-using Identifier = std::string_view;
-
 /************************************/
 /* DiagnosticServicesCollection     */
 /************************************/
 
-/// Concrete service bundle returned by DiagnosticServicesCollectionBuilder::build().
+/// Concrete service bundle returned by DiagnosticServicesCollectionBuilder::Build().
 ///
 /// Extends DiagnosticJobCollection with ownership of the registered UDS handlers.
-/// Callers hold a unique_ptr<DiagnosticServicesCollection> to keep the handlers
-/// active; the runtime binding layer (ServiceRegistrar) takes the collection and
-/// dispatches incoming requests to the correct handler internally.
+/// Callers hold a `unique_ptr<DiagnosticServicesCollection>` to keep the handlers
+/// alive; destroying it signals that the handlers should no longer be active.
 ///
-/// Instances are only constructible through DiagnosticServicesCollectionBuilder::build().
+/// The runtime binding layer (ServiceRegistrar) consumes the collection through
+/// the read-only accessors and dispatches incoming requests to the correct handler internally.
+///
+/// @note This collection is a **passive container** — `Build()` does not activate (offer)
+///       the handlers. The caller must pass the result to the ServiceRegistrar to make
+///       the handlers reachable by the diagnostic runtime.
+///
+/// Instances are only constructible through DiagnosticServicesCollectionBuilder::Build().
 class DiagnosticServicesCollection final : public DiagnosticJobCollection
 {
   public:
     ~DiagnosticServicesCollection() noexcept override = default;
+
+    DiagnosticServicesCollection(const DiagnosticServicesCollection&) = delete;
+    DiagnosticServicesCollection(DiagnosticServicesCollection&&) noexcept = delete;
+    DiagnosticServicesCollection& operator=(const DiagnosticServicesCollection&) = delete;
+    DiagnosticServicesCollection& operator=(DiagnosticServicesCollection&&) noexcept = delete;
 
   private:
     friend class DiagnosticServicesCollectionBuilder;
@@ -86,133 +73,125 @@ class DiagnosticServicesCollection final : public DiagnosticJobCollection
     std::vector<std::pair<std::string, std::unique_ptr<WriteDataByIdentifier>>> write_dids_;
     std::vector<std::pair<std::string, std::unique_ptr<GenericDataIdentifier>>> data_ids_;
     std::vector<std::pair<std::string, std::unique_ptr<RoutineControl>>> routines_;
-    std::vector<std::pair<std::string, std::unique_ptr<GenericService>>> uds_services_;
+    std::vector<std::pair<std::string, std::unique_ptr<GenericService>>> generic_services_;
 };
 
-/************************************/
-/* DiagnosticServicesCollectionBuilder */
-/************************************/
+/****************************************/
+/* DiagnosticServicesCollectionBuilder  */
+/****************************************/
 
 /// Fluent builder for assembling a set of UDS diagnostic service handlers.
 ///
-/// Each with_*() method takes ownership of the handler via std::unique_ptr<BaseInterface>
+/// Each With*() method takes ownership of the handler via `std::unique_ptr<BaseInterface>`.
 ///
-/// The string @p identifier is stored for use by the future ServiceRegistrar / find_* layer.
-/// build() validates that no stored service pointer is nullptr.
+/// The string identifier is stored as-is; duplicate identifiers across the same or different
+/// handler types are **not** checked by the builder — the consuming ServiceRegistrar is
+/// responsible for handling dispatch ambiguity if duplicates are registered.
+/// Build() validates only that no stored handler pointer is nullptr.
 ///
-/// The builder is non-copyable and non-movable; all with_*() methods return an
-/// lvalue reference to support method chaining on a named variable.
+/// The builder is non-copyable and non-movable. All With*() and Build() methods
+/// are lvalue ref-qualified (`&`) — they must be called on a named variable, not
+/// on a temporary.
 class DiagnosticServicesCollectionBuilder final
 {
   public:
     DiagnosticServicesCollectionBuilder() noexcept = default;
 
     /// Register a read-only DID handler (UDS Service 0x22).
-    /// @param identifier  Service identifier string (e.g. "F190") — stored for future lookup.
-    /// @param handler     Heap-allocated handler — ownership transferred to the builder.
-    DiagnosticServicesCollectionBuilder& with_read_did(Identifier identifier,
-                                                       std::unique_ptr<ReadDataByIdentifier> handler) &
+    DiagnosticServicesCollectionBuilder& WithReadDid(std::string_view identifier,
+                                                     std::unique_ptr<ReadDataByIdentifier> handler) &
     {
         read_dids_.emplace_back(std::string{identifier}, std::move(handler));
         return *this;
     }
 
     /// Register a write-only DID handler (UDS Service 0x2E).
-    /// @param identifier  Service identifier string.
-    /// @param handler     Heap-allocated handler — ownership transferred to the builder.
-    DiagnosticServicesCollectionBuilder& with_write_did(Identifier identifier,
-                                                        std::unique_ptr<WriteDataByIdentifier> handler) &
+    DiagnosticServicesCollectionBuilder& WithWriteDid(std::string_view identifier,
+                                                      std::unique_ptr<WriteDataByIdentifier> handler) &
     {
         write_dids_.emplace_back(std::string{identifier}, std::move(handler));
         return *this;
     }
 
     /// Register a combined read+write DID handler (supports both 0x22 and 0x2E).
-    /// @param identifier  Service identifier string.
-    /// @param handler     Heap-allocated handler — ownership transferred to the builder.
-    DiagnosticServicesCollectionBuilder& with_data_id(Identifier identifier,
-                                                      std::unique_ptr<GenericDataIdentifier> handler) &
+    DiagnosticServicesCollectionBuilder& WithDataId(std::string_view identifier,
+                                                    std::unique_ptr<GenericDataIdentifier> handler) &
     {
         data_ids_.emplace_back(std::string{identifier}, std::move(handler));
         return *this;
     }
 
     /// Register a RoutineControl handler (UDS Service 0x31).
-    /// @param identifier  Service identifier string (e.g. "0301").
-    /// @param routine     Heap-allocated handler — ownership transferred to the builder.
-    DiagnosticServicesCollectionBuilder& with_routine(Identifier identifier,
-                                                      std::unique_ptr<RoutineControl> routine) &
+    DiagnosticServicesCollectionBuilder& WithRoutine(std::string_view identifier,
+                                                     std::unique_ptr<RoutineControl> routine) &
     {
         routines_.emplace_back(std::string{identifier}, std::move(routine));
         return *this;
     }
 
-    /// Register a raw UDS service handler for proprietary or vendor-specific services
-    /// not covered by the DID or RoutineControl categories.
-    /// @param identifier  Service identifier string.
-    /// @param service     Heap-allocated handler — ownership transferred to the builder.
-    DiagnosticServicesCollectionBuilder& with_uds_service(Identifier identifier,
-                                                          std::unique_ptr<GenericService> service) &
+    /// Register a raw UDS service handler for proprietary or vendor-specific services.
+    DiagnosticServicesCollectionBuilder& WithGenericService(std::string_view identifier,
+                                                            std::unique_ptr<GenericService> service) &
     {
-        uds_services_.emplace_back(std::string{identifier}, std::move(service));
+        generic_services_.emplace_back(std::string{identifier}, std::move(service));
         return *this;
     }
 
     /// Validate and finalise the collection.
     ///
-    /// Validation rule: no registered service pointer may be nullptr.
+    /// Validation rule: no registered handler pointer may be nullptr.
+    /// Duplicate identifiers are not rejected — see the class-level note.
     ///
     /// On success all handlers are moved into a new DiagnosticServicesCollection and
     /// the builder vectors are left empty (moved-from state).
     ///
-    /// @note Calling build() again after a successful call returns a valid but empty
+    /// @note Calling Build() again after a successful call returns a valid but empty
     ///       DiagnosticServicesCollection without error, because the builder is empty.
     ///
     /// @return Ok(unique_ptr<DiagnosticServicesCollection>) on success.
     ///         Err(NegativeResponseCode::ConditionsNotCorrect) if any registered handler pointer is nullptr.
-    [[nodiscard]] Result<std::unique_ptr<DiagnosticServicesCollection>> build() &
+    [[nodiscard]] Result<std::unique_ptr<DiagnosticServicesCollection>> Build() &
     {
-        using ReturnType = Result<std::unique_ptr<DiagnosticServicesCollection>>;
-
-        if (has_null_entry(read_dids_) || has_null_entry(write_dids_) || has_null_entry(data_ids_) ||
-            has_null_entry(routines_) || has_null_entry(uds_services_))
+        if (HasNullEntry(read_dids_) || HasNullEntry(write_dids_) ||
+            HasNullEntry(data_ids_) || HasNullEntry(routines_) || HasNullEntry(generic_services_))
         {
-            return ReturnType{score::unexpect, NegativeResponseCode::ConditionsNotCorrect};
+            return score::cpp::make_unexpected(NegativeResponseCode::ConditionsNotCorrect);
         }
 
+        // Raw 'new' is necessary here because DiagnosticServicesCollection's default
+        // constructor is private (only this builder may construct it); std::make_unique
+        // cannot reach private constructors even from a friend class.
         auto collection = std::unique_ptr<DiagnosticServicesCollection>(new DiagnosticServicesCollection{});
 
         collection->read_dids_ = std::move(read_dids_);
         collection->write_dids_ = std::move(write_dids_);
         collection->data_ids_ = std::move(data_ids_);
         collection->routines_ = std::move(routines_);
-        collection->uds_services_ = std::move(uds_services_);
+        collection->generic_services_ = std::move(generic_services_);
 
         return collection;
     }
 
     DiagnosticServicesCollectionBuilder(const DiagnosticServicesCollectionBuilder&) = delete;
     DiagnosticServicesCollectionBuilder(DiagnosticServicesCollectionBuilder&&) noexcept = delete;
-    DiagnosticServicesCollectionBuilder& operator=(const DiagnosticServicesCollectionBuilder&) & = delete;
-    DiagnosticServicesCollectionBuilder& operator=(DiagnosticServicesCollectionBuilder&&) & noexcept = delete;
+    DiagnosticServicesCollectionBuilder& operator=(const DiagnosticServicesCollectionBuilder&) = delete;
+    DiagnosticServicesCollectionBuilder& operator=(DiagnosticServicesCollectionBuilder&&) noexcept = delete;
     ~DiagnosticServicesCollectionBuilder() noexcept = default;
 
   private:
-    template <typename Container>
-    static bool has_null_entry(const Container& container) noexcept
+    template <typename Container> [[nodiscard]] static bool HasNullEntry(const Container& container) noexcept
     {
-        return std::any_of(container.begin(), container.end(), [](const auto& entry) {
-            return entry.second == nullptr;
-        });
+        return std::any_of(container.begin(), container.end(),
+                           [](const auto& handler_entry) { return handler_entry.second == nullptr; });
     }
 
     std::vector<std::pair<std::string, std::unique_ptr<ReadDataByIdentifier>>> read_dids_;
     std::vector<std::pair<std::string, std::unique_ptr<WriteDataByIdentifier>>> write_dids_;
     std::vector<std::pair<std::string, std::unique_ptr<GenericDataIdentifier>>> data_ids_;
     std::vector<std::pair<std::string, std::unique_ptr<RoutineControl>>> routines_;
-    std::vector<std::pair<std::string, std::unique_ptr<GenericService>>> uds_services_;
+    std::vector<std::pair<std::string, std::unique_ptr<GenericService>>> generic_services_;
 };
 
 }  // namespace score::mw::diag::uds
 
-#endif  // SCORE_MW_DIAG_DIAGNOSTIC_SERVICES_COLLECTION_BUILDER_H
+#endif  // SCORE_MW_DIAG_UDS_DIAGNOSTIC_SERVICES_COLLECTION_BUILDER_H

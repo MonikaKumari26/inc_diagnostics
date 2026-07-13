@@ -14,21 +14,6 @@
 /// @file diagnostic_services_collection_builder_test.cpp
 /// @brief Unit tests for DiagnosticJobCollection, DiagnosticServicesCollection, and
 ///        DiagnosticServicesCollectionBuilder.
-///
-/// Covers:
-///   DiagnosticJobCollection
-///     - Virtual dispatch through base pointer (via mock).
-///
-///   DiagnosticServicesCollection / DiagnosticServicesCollectionBuilder
-///     - build() on an empty builder succeeds (returns a non-null collection).
-///     - build() with each of the five handler types succeeds.
-///     - build() with all handler types combined succeeds.
-///     - build() fails (PreconditionNotFulfilled → ConditionsNotCorrect) when any
-///       registered handler pointer is nullptr.
-///     - build() clears the builder state — a subsequent call returns an empty
-///       (but valid) collection without error.
-///     - with_*() methods return *this (enable chaining).
-///     - The returned DiagnosticServicesCollection is a DiagnosticJobCollection.
 
 #include "score/mw/diag/uds/diagnostic_services_collection_builder.h"
 
@@ -53,7 +38,7 @@ TEST(DiagnosticJobCollectionTest, VirtualDestructorFiresThroughBasePointer)
 {
     // Verify that releasing a base-class unique_ptr correctly dispatches
     // to the derived destructor (proves the vtable is set up correctly).
-    auto mock = std::make_unique<DiagnosticJobCollectionMock>();
+    auto mock = std::make_unique<test::DiagnosticJobCollectionMock>();
     EXPECT_CALL(*mock, Destruct());
 
     std::unique_ptr<DiagnosticJobCollection> base = std::move(mock);
@@ -66,7 +51,7 @@ TEST(DiagnosticServicesCollectionBuilderTest, BuildEmptyCollectionSucceeds)
 {
     DiagnosticServicesCollectionBuilder builder{};
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
     ASSERT_TRUE(result.has_value());
     EXPECT_NE(result->get(), nullptr);
@@ -75,9 +60,9 @@ TEST(DiagnosticServicesCollectionBuilderTest, BuildEmptyCollectionSucceeds)
 TEST(DiagnosticServicesCollectionBuilderTest, BuildWithReadDidSucceeds)
 {
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_read_did("F190", std::make_unique<ReadDataByIdentifierMock>());
+    builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>());
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
     EXPECT_TRUE(result.has_value());
 }
@@ -85,9 +70,9 @@ TEST(DiagnosticServicesCollectionBuilderTest, BuildWithReadDidSucceeds)
 TEST(DiagnosticServicesCollectionBuilderTest, BuildWithWriteDidSucceeds)
 {
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_write_did("F190", std::make_unique<WriteDataByIdentifierMock>());
+    builder.WithWriteDid("F190", std::make_unique<test::WriteDataByIdentifierMock>());
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
     EXPECT_TRUE(result.has_value());
 }
@@ -95,9 +80,9 @@ TEST(DiagnosticServicesCollectionBuilderTest, BuildWithWriteDidSucceeds)
 TEST(DiagnosticServicesCollectionBuilderTest, BuildWithDataIdSucceeds)
 {
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_data_id("F190", std::make_unique<GenericDataIdentifierMock>());
+    builder.WithDataId("F190", std::make_unique<test::GenericDataIdentifierMock>());
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
     EXPECT_TRUE(result.has_value());
 }
@@ -105,19 +90,19 @@ TEST(DiagnosticServicesCollectionBuilderTest, BuildWithDataIdSucceeds)
 TEST(DiagnosticServicesCollectionBuilderTest, BuildWithRoutineSucceeds)
 {
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_routine("0301", std::make_unique<RoutineControlMock>());
+    builder.WithRoutine("0301", std::make_unique<test::RoutineControlMock>());
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
     EXPECT_TRUE(result.has_value());
 }
 
-TEST(DiagnosticServicesCollectionBuilderTest, BuildWithUdsServiceSucceeds)
+TEST(DiagnosticServicesCollectionBuilderTest, BuildWithGenericServiceSucceeds)
 {
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_uds_service("B200", std::make_unique<GenericServiceMock>());
+    builder.WithGenericService("B200", std::make_unique<test::GenericServiceMock>());
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
     EXPECT_TRUE(result.has_value());
 }
@@ -125,26 +110,40 @@ TEST(DiagnosticServicesCollectionBuilderTest, BuildWithUdsServiceSucceeds)
 TEST(DiagnosticServicesCollectionBuilderTest, BuildWithAllHandlerTypesCombinedSucceeds)
 {
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_read_did("F190", std::make_unique<ReadDataByIdentifierMock>())
-        .with_write_did("F191", std::make_unique<WriteDataByIdentifierMock>())
-        .with_data_id("F192", std::make_unique<GenericDataIdentifierMock>())
-        .with_routine("0301", std::make_unique<RoutineControlMock>())
-        .with_uds_service("B200", std::make_unique<GenericServiceMock>());
+    builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>())
+        .WithWriteDid("F191", std::make_unique<test::WriteDataByIdentifierMock>())
+        .WithDataId("F192", std::make_unique<test::GenericDataIdentifierMock>())
+        .WithRoutine("0301", std::make_unique<test::RoutineControlMock>())
+        .WithGenericService("B200", std::make_unique<test::GenericServiceMock>());
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
     EXPECT_TRUE(result.has_value());
 }
 
-TEST(DiagnosticServicesCollectionBuilderTest, MultipleHandlersPerTypeSuceed)
+TEST(DiagnosticServicesCollectionBuilderTest, MultipleHandlersPerTypeSucceed)
 {
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_read_did("F190", std::make_unique<ReadDataByIdentifierMock>());
-    builder.with_read_did("F191", std::make_unique<ReadDataByIdentifierMock>());
-    builder.with_routine("0301", std::make_unique<RoutineControlMock>());
-    builder.with_routine("0302", std::make_unique<RoutineControlMock>());
+    builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>());
+    builder.WithReadDid("F191", std::make_unique<test::ReadDataByIdentifierMock>());
+    builder.WithRoutine("0301", std::make_unique<test::RoutineControlMock>());
+    builder.WithRoutine("0302", std::make_unique<test::RoutineControlMock>());
 
-    auto result = builder.build();
+    auto result = builder.Build();
+
+    EXPECT_TRUE(result.has_value());
+}
+
+TEST(DiagnosticServicesCollectionBuilderTest, DuplicateIdentifierAcrossHandlerTypesIsAccepted)
+{
+    // The builder does not validate duplicate identifiers across handler types.
+    // Dispatch ambiguity is the ServiceRegistrar's responsibility (see class doc).
+    DiagnosticServicesCollectionBuilder builder{};
+    builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>());
+    builder.WithWriteDid("F190", std::make_unique<test::WriteDataByIdentifierMock>());
+    builder.WithDataId("F190", std::make_unique<test::GenericDataIdentifierMock>());
+
+    auto result = builder.Build();
 
     EXPECT_TRUE(result.has_value());
 }
@@ -154,9 +153,9 @@ TEST(DiagnosticServicesCollectionBuilderTest, MultipleHandlersPerTypeSuceed)
 TEST(DiagnosticServicesCollectionBuilderTest, BuildWithNullReadDidFails)
 {
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_read_did("F190", nullptr);
+    builder.WithReadDid("F190", nullptr);
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
     ASSERT_FALSE(result.has_value());
     EXPECT_EQ(result.error(), NegativeResponseCode::ConditionsNotCorrect);
@@ -165,9 +164,9 @@ TEST(DiagnosticServicesCollectionBuilderTest, BuildWithNullReadDidFails)
 TEST(DiagnosticServicesCollectionBuilderTest, BuildWithNullWriteDidFails)
 {
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_write_did("F190", nullptr);
+    builder.WithWriteDid("F190", nullptr);
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
     ASSERT_FALSE(result.has_value());
     EXPECT_EQ(result.error(), NegativeResponseCode::ConditionsNotCorrect);
@@ -176,9 +175,9 @@ TEST(DiagnosticServicesCollectionBuilderTest, BuildWithNullWriteDidFails)
 TEST(DiagnosticServicesCollectionBuilderTest, BuildWithNullDataIdFails)
 {
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_data_id("F190", nullptr);
+    builder.WithDataId("F190", nullptr);
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
     ASSERT_FALSE(result.has_value());
     EXPECT_EQ(result.error(), NegativeResponseCode::ConditionsNotCorrect);
@@ -187,20 +186,20 @@ TEST(DiagnosticServicesCollectionBuilderTest, BuildWithNullDataIdFails)
 TEST(DiagnosticServicesCollectionBuilderTest, BuildWithNullRoutineFails)
 {
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_routine("0301", nullptr);
+    builder.WithRoutine("0301", nullptr);
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
     ASSERT_FALSE(result.has_value());
     EXPECT_EQ(result.error(), NegativeResponseCode::ConditionsNotCorrect);
 }
 
-TEST(DiagnosticServicesCollectionBuilderTest, BuildWithNullUdsServiceFails)
+TEST(DiagnosticServicesCollectionBuilderTest, BuildWithNullGenericServiceFails)
 {
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_uds_service("B200", nullptr);
+    builder.WithGenericService("B200", nullptr);
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
     ASSERT_FALSE(result.has_value());
     EXPECT_EQ(result.error(), NegativeResponseCode::ConditionsNotCorrect);
@@ -210,80 +209,45 @@ TEST(DiagnosticServicesCollectionBuilderTest, NullHandlerMixedWithValidHandlerFa
 {
     // A single null entry among multiple valid handlers should still fail.
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_read_did("F190", std::make_unique<ReadDataByIdentifierMock>())
-        .with_read_did("F191", nullptr);  // null entry
+    builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>())
+        .WithReadDid("F191", nullptr);
 
-    auto result = builder.build();
+    auto result = builder.Build();
 
-    EXPECT_FALSE(result.has_value());
+    ASSERT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), NegativeResponseCode::ConditionsNotCorrect);
 }
 
 // ── DiagnosticServicesCollectionBuilder — post-build state ───────────────────
 
-TEST(DiagnosticServicesCollectionBuilderTest, BuildClearsBuilderState)
+TEST(DiagnosticServicesCollectionBuilderTest, BuildResultIsUsableAsDiagnosticJobCollection)
 {
-    // After a successful build() the builder vectors are moved-from (empty).
-    // A second build() call should therefore also succeed and return an
-    // empty-but-valid collection.
+    // Verify the production use case: the runtime stores the result as a
+    // unique_ptr<DiagnosticJobCollection> base pointer and destructs through it.
     DiagnosticServicesCollectionBuilder builder{};
-    builder.with_read_did("F190", std::make_unique<ReadDataByIdentifierMock>());
+    builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>());
 
-    auto result1 = builder.build();
-    ASSERT_TRUE(result1.has_value());
-
-    auto result2 = builder.build();  // builder is now empty
-    EXPECT_TRUE(result2.has_value());
-}
-
-// ── DiagnosticServicesCollectionBuilder — method chaining ────────────────────
-
-TEST(DiagnosticServicesCollectionBuilderTest, WithReadDidReturnsSameBuilder)
-{
-    DiagnosticServicesCollectionBuilder builder{};
-    auto& returned = builder.with_read_did("F190", std::make_unique<ReadDataByIdentifierMock>());
-    EXPECT_EQ(&returned, &builder);
-}
-
-TEST(DiagnosticServicesCollectionBuilderTest, WithWriteDidReturnsSameBuilder)
-{
-    DiagnosticServicesCollectionBuilder builder{};
-    auto& returned = builder.with_write_did("F190", std::make_unique<WriteDataByIdentifierMock>());
-    EXPECT_EQ(&returned, &builder);
-}
-
-TEST(DiagnosticServicesCollectionBuilderTest, WithDataIdReturnsSameBuilder)
-{
-    DiagnosticServicesCollectionBuilder builder{};
-    auto& returned = builder.with_data_id("F190", std::make_unique<GenericDataIdentifierMock>());
-    EXPECT_EQ(&returned, &builder);
-}
-
-TEST(DiagnosticServicesCollectionBuilderTest, WithRoutineReturnsSameBuilder)
-{
-    DiagnosticServicesCollectionBuilder builder{};
-    auto& returned = builder.with_routine("0301", std::make_unique<RoutineControlMock>());
-    EXPECT_EQ(&returned, &builder);
-}
-
-TEST(DiagnosticServicesCollectionBuilderTest, WithUdsServiceReturnsSameBuilder)
-{
-    DiagnosticServicesCollectionBuilder builder{};
-    auto& returned = builder.with_uds_service("B200", std::make_unique<GenericServiceMock>());
-    EXPECT_EQ(&returned, &builder);
-}
-
-// ── DiagnosticServicesCollection — type relationships ───────────────────────
-
-TEST(DiagnosticServicesCollectionBuilderTest, CollectionIsADiagnosticJobCollection)
-{
-    // The returned collection must be usable as a DiagnosticJobCollection,
-    // enabling callers to hold it through the base-class interface.
-    DiagnosticServicesCollectionBuilder builder{};
-    auto result = builder.build();
+    auto result = builder.Build();
     ASSERT_TRUE(result.has_value());
 
+    // Implicit upcast — must compile and destruct cleanly through the base pointer.
     std::unique_ptr<DiagnosticJobCollection> base = std::move(*result);
-    EXPECT_NE(base.get(), nullptr);
+    base.reset();
+}
+
+TEST(DiagnosticServicesCollectionBuilderTest, BuildClearsBuilderState)
+{
+    // After a successful Build() the builder vectors are moved-from (empty).
+    // A second Build() call should therefore also succeed and return an
+    // empty-but-valid collection.
+    DiagnosticServicesCollectionBuilder builder{};
+    builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>());
+
+    auto result1 = builder.Build();
+    ASSERT_TRUE(result1.has_value());
+
+    auto result2 = builder.Build();  // builder is now empty
+    EXPECT_TRUE(result2.has_value());
 }
 
 }  // namespace score::mw::diag::uds

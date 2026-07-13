@@ -14,13 +14,9 @@
 /// @file diagnostic_job_collection.h
 /// @brief DiagnosticJobCollection — lifetime handle for a registered set of
 ///        diagnostic service handlers.
-///
-/// As long as a DiagnosticJobCollection instance is alive the diagnostic service
-/// implementations registered with the runtime remain active.  Destroying the
-/// collection deregisters them.
 
-#ifndef SCORE_MW_DIAG_DIAGNOSTIC_JOB_COLLECTION_H
-#define SCORE_MW_DIAG_DIAGNOSTIC_JOB_COLLECTION_H
+#ifndef SCORE_MW_DIAG_UDS_DIAGNOSTIC_JOB_COLLECTION_H
+#define SCORE_MW_DIAG_UDS_DIAGNOSTIC_JOB_COLLECTION_H
 
 namespace score::mw::diag::uds
 {
@@ -31,14 +27,10 @@ namespace score::mw::diag::uds
 /// service registration succeeds.  The caller holds the returned
 /// `unique_ptr<DiagnosticJobCollection>` alive for as long as the handlers must remain
 /// registered; releasing the pointer deregisters all associated services.
-///
-/// @note This class has no public business methods by design — the object's
-///       lifetime IS the mechanism: constructing it activates the handlers,
-///       destroying it deactivates them (RAII lifetime pattern).
 class DiagnosticJobCollection
 {
   public:
-    DiagnosticJobCollection() = default;
+    constexpr DiagnosticJobCollection() = default;
     virtual ~DiagnosticJobCollection() noexcept = default;
 
   protected:
@@ -50,4 +42,4 @@ class DiagnosticJobCollection
 
 }  // namespace score::mw::diag::uds
 
-#endif  // SCORE_MW_DIAG_DIAGNOSTIC_JOB_COLLECTION_H
+#endif  // SCORE_MW_DIAG_UDS_DIAGNOSTIC_JOB_COLLECTION_H

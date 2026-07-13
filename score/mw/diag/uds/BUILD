@@ -93,6 +93,30 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "diagnostic_job_collection",
+    hdrs = ["diagnostic_job_collection.h"],
+    srcs = ["diagnostic_job_collection.cpp"],
+    visibility = ["//score:__subpackages__"],
+)
+
+cc_library(
+    name = "diagnostic_services_collection_builder",
+    hdrs = ["diagnostic_services_collection_builder.h"],
+    srcs = ["diagnostic_services_collection_builder.cpp"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        ":diagnostic_job_collection",
+        ":generic_data_identifier",
+        ":generic_service",
+        ":read_data_by_identifier",
+        ":routine_control",
+        ":write_data_by_identifier",
+        "//score/mw/diag:diag_result",
+        "@score_baselibs//score/language/futurecpp",
+    ],
+)
+
 # Umbrella: depends on all individual targets above. Use this when you need
 # the full UDS interface set, or as a migration path from the old monolithic target.
 cc_library(
@@ -104,23 +128,6 @@ cc_library(
         ":read_data_by_identifier",
         ":routine_control",
         ":write_data_by_identifier",
-    ],
-)
-
-cc_library(
-    name = "diagnostic_job_collection",
-    hdrs = ["diagnostic_job_collection.h"],
-    visibility = ["//score:__subpackages__"],
-)
-
-cc_library(
-    name = "diagnostic_services_collection_builder",
-    hdrs = ["diagnostic_services_collection_builder.h"],
-    visibility = ["//score:__subpackages__"],
-    deps = [
-        ":diagnostic_job_collection",
-        ":uds",
-        "//score/mw/diag:diag_result",
     ],
 )
 
@@ -154,6 +161,7 @@ cc_library(
     name = "diagnostic_job_collection_mocks",
     testonly = True,
     hdrs = ["diagnostic_job_collection_mock.h"],
+    srcs = ["diagnostic_job_collection_mocks.cpp"],
     visibility = ["//score:__subpackages__"],
     deps = [
         ":diagnostic_job_collection",
@@ -178,6 +186,7 @@ cc_test(
 test_suite(
     name = "unit_tests",
     tests = [
+        ":diagnostic_services_collection_builder_test",
         ":negative_response_code_test",
     ],
     visibility = ["//score/mw/diag:__pkg__"],
@@ -190,7 +199,7 @@ cc_test(
     deps = [
         ":diagnostic_job_collection_mocks",
         ":diagnostic_services_collection_builder",
-        ":uds_mocks",
+        ":mocks",
         "@googletest//:gtest_main",
     ],
 )
