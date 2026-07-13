@@ -11,10 +11,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-// NOTE: write_data_by_identifier_mock.h and generic_data_identifier_mock.h are excluded:
-// their MOCK_METHOD(Result<void>, ...) forces instantiation of expected<void, E>, which
-// the current futurecpp version does not support in a standalone TU.
-// TODO: include them here once futurecpp fixes the expected<void, E> specialization.
+#include "score/mw/diag/uds/generic_data_identifier_mock.h"
 #include "score/mw/diag/uds/generic_service_mock.h"
 #include "score/mw/diag/uds/read_data_by_identifier_mock.h"
 #include "score/mw/diag/uds/routine_control_mock.h"
+#include "score/mw/diag/uds/write_data_by_identifier_mock.h"

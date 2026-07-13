@@ -28,8 +28,8 @@ namespace score::mw::diag::uds::test
 class RoutineControlMock : public RoutineControl
 {
   public:
-    MOCK_METHOD(Result<StartRoutine>, Start, (std::optional<ByteView> input), (override));
-    MOCK_METHOD(Result<std::optional<ByteVector>>, Stop, (std::optional<ByteView> input), (override));
+    MOCK_METHOD(Result<ByteVector>, Start, (ByteView input), (override));
+    MOCK_METHOD(Result<ByteVector>, Stop, (ByteView input), (override));
     MOCK_METHOD(std::optional<std::uint8_t>, CompletionPercentage, (), (const, noexcept, override));
 };
 

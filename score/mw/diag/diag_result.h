@@ -23,7 +23,8 @@
 
 #include "score/mw/diag/byte_types.h"
 #include "score/mw/diag/uds/negative_response_code.h"
-#include <score/expected.hpp>  // score::cpp::expected — public futurecpp API
+#include <score/blank.hpp>
+#include <score/expected.hpp>
 
 namespace score::mw::diag
 {
