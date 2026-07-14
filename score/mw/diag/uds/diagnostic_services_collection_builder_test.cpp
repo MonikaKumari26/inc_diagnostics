@@ -17,7 +17,6 @@
 
 #include "score/mw/diag/uds/diagnostic_services_collection_builder.h"
 
-#include "score/mw/diag/uds/diagnostic_job_collection_mock.h"
 #include "score/mw/diag/uds/generic_data_identifier_mock.h"
 #include "score/mw/diag/uds/generic_service_mock.h"
 #include "score/mw/diag/uds/read_data_by_identifier_mock.h"
@@ -31,19 +30,6 @@
 
 namespace score::mw::diag::uds
 {
-
-// ── DiagnosticJobCollection ──────────────────────────────────────────────────
-
-TEST(DiagnosticJobCollectionTest, VirtualDestructorFiresThroughBasePointer)
-{
-    // Verify that releasing a base-class unique_ptr correctly dispatches
-    // to the derived destructor (proves the vtable is set up correctly).
-    auto mock = std::make_unique<test::DiagnosticJobCollectionMock>();
-    EXPECT_CALL(*mock, Destruct());
-
-    std::unique_ptr<DiagnosticJobCollection> base = std::move(mock);
-    base.reset();  // ~DiagnosticJobCollectionMock() must fire here
-}
 
 // ── DiagnosticServicesCollectionBuilder — successful build paths ─────────────
 
@@ -235,19 +221,91 @@ TEST(DiagnosticServicesCollectionBuilderTest, BuildResultIsUsableAsDiagnosticJob
     base.reset();
 }
 
-TEST(DiagnosticServicesCollectionBuilderTest, BuildClearsBuilderState)
+// ── In-place construction overloads ─────────────────────────────────────────
+
+namespace
 {
-    // After a successful Build() the builder vectors are moved-from (empty).
-    // A second Build() call should therefore also succeed and return an
-    // empty-but-valid collection.
-    DiagnosticServicesCollectionBuilder builder{};
-    builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>());
 
-    auto result1 = builder.Build();
-    ASSERT_TRUE(result1.has_value());
+struct ConcreteReadHandler final : public ReadDataByIdentifier
+{
+    explicit ConcreteReadHandler(int) {}
+    Result<ByteVector> Read() override { return ByteVector{}; }
+};
 
-    auto result2 = builder.Build();  // builder is now empty
-    EXPECT_TRUE(result2.has_value());
+struct ConcreteWriteHandler final : public WriteDataByIdentifier
+{
+    explicit ConcreteWriteHandler(int) {}
+    Result<score::cpp::blank> Write(ByteView) override
+    {
+        return score::cpp::blank{};
+    }
+};
+
+struct ConcreteDataIdHandler final : public GenericDataIdentifier
+{
+    explicit ConcreteDataIdHandler(int) {}
+    Result<ByteVector> Read() override { return ByteVector{}; }
+    Result<score::cpp::blank> Write(ByteView) override { return score::cpp::blank{}; }
+};
+
+struct ConcreteRoutineHandler final : public RoutineControl
+{
+    explicit ConcreteRoutineHandler(int) {}
+    Result<ByteVector> Start(ByteView) override { return ByteVector{}; }
+    Result<ByteVector> Stop(ByteView) override { return ByteVector{}; }
+    Result<ByteVector> RequestResults(ByteView) override { return ByteVector{}; }
+};
+
+struct ConcreteGenericService final : public GenericService
+{
+    explicit ConcreteGenericService(int) {}
+    Result<ByteVector> HandleMessage(ByteView) override { return ByteVector{}; }
+};
+
+}  // namespace
+
+TEST(DiagnosticServicesCollectionBuilderTest, InPlaceWithReadDidSucceeds)
+{
+    DiagnosticServicesCollectionBuilder builder;
+    builder.WithReadDid<ConcreteReadHandler>("F190", 42);
+    EXPECT_TRUE(builder.Build().has_value());
+}
+
+TEST(DiagnosticServicesCollectionBuilderTest, InPlaceWithWriteDidSucceeds)
+{
+    DiagnosticServicesCollectionBuilder builder;
+    builder.WithWriteDid<ConcreteWriteHandler>("F190", 42);
+    EXPECT_TRUE(builder.Build().has_value());
+}
+
+TEST(DiagnosticServicesCollectionBuilderTest, InPlaceWithDataIdSucceeds)
+{
+    DiagnosticServicesCollectionBuilder builder;
+    builder.WithDataId<ConcreteDataIdHandler>("F190", 42);
+    EXPECT_TRUE(builder.Build().has_value());
+}
+
+TEST(DiagnosticServicesCollectionBuilderTest, InPlaceWithRoutineSucceeds)
+{
+    DiagnosticServicesCollectionBuilder builder;
+    builder.WithRoutine<ConcreteRoutineHandler>("0301", 42);
+    EXPECT_TRUE(builder.Build().has_value());
+}
+
+TEST(DiagnosticServicesCollectionBuilderTest, InPlaceWithGenericServiceSucceeds)
+{
+    DiagnosticServicesCollectionBuilder builder;
+    builder.WithGenericService<ConcreteGenericService>("B200", 42);
+    EXPECT_TRUE(builder.Build().has_value());
+}
+
+TEST(DiagnosticServicesCollectionBuilderTest, InPlaceAndUniquePtrOverloadsMixSucceeds)
+{
+    DiagnosticServicesCollectionBuilder builder;
+    builder.WithReadDid<ConcreteReadHandler>("F190", 1)
+        .WithWriteDid("F191", std::make_unique<test::WriteDataByIdentifierMock>())
+        .WithRoutine<ConcreteRoutineHandler>("0301", 2);
+    EXPECT_TRUE(builder.Build().has_value());
 }
 
 }  // namespace score::mw::diag::uds

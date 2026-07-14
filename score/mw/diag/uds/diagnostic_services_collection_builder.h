@@ -14,6 +14,10 @@
 /// @file diagnostic_services_collection_builder.h
 /// @brief DiagnosticServicesCollectionBuilder and DiagnosticServicesCollection for
 ///        bundling UDS diagnostic service handlers before runtime registration.
+///
+/// With*() methods have two overloads:
+///   - `With*(id, unique_ptr<Base>)`   — takes ownership of a pre-constructed handler.
+///   - `With*<T>(id, ctor_args...)`    — constructs the handler in-place.
 
 #ifndef SCORE_MW_DIAG_UDS_DIAGNOSTIC_SERVICES_COLLECTION_BUILDER_H
 #define SCORE_MW_DIAG_UDS_DIAGNOSTIC_SERVICES_COLLECTION_BUILDER_H
@@ -22,6 +26,7 @@
 #include "score/mw/diag/uds/diagnostic_job_collection.h"
 #include "score/mw/diag/uds/generic_data_identifier.h"
 #include "score/mw/diag/uds/generic_service.h"
+#include "score/mw/diag/uds/negative_response_code.h"
 #include "score/mw/diag/uds/read_data_by_identifier.h"
 #include "score/mw/diag/uds/routine_control.h"
 #include "score/mw/diag/uds/write_data_by_identifier.h"
@@ -30,6 +35,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -80,22 +86,33 @@ class DiagnosticServicesCollection final : public DiagnosticJobCollection
 /* DiagnosticServicesCollectionBuilder  */
 /****************************************/
 
-/// Fluent builder for assembling a set of UDS diagnostic service handlers.
+/// Fluent builder for assembling UDS diagnostic service handlers.
 ///
-/// Each With*() method takes ownership of the handler via `std::unique_ptr<BaseInterface>`.
+/// Each With*() method has two overloads:
+///   - `With*(id, unique_ptr<Base>)`   — takes ownership of an externally constructed handler.
+///   - `With*<T>(id, args...)`         — constructs the handler in-place from constructor arguments.
+///
+/// @param identifier (all With*() methods)  Opaque string key stored as-is; used by the
+///                                           ServiceRegistrar to route incoming requests.
+/// @param handler / routine / service        Non-null owning pointer to the implementation.
+/// @param args                               Constructor arguments forwarded to `T`.
 ///
 /// The string identifier is stored as-is; duplicate identifiers across the same or different
 /// handler types are **not** checked by the builder — the consuming ServiceRegistrar is
 /// responsible for handling dispatch ambiguity if duplicates are registered.
 /// Build() validates only that no stored handler pointer is nullptr.
 ///
-/// The builder is non-copyable and non-movable. All With*() and Build() methods
-/// are lvalue ref-qualified (`&`) — they must be called on a named variable, not
-/// on a temporary.
+/// The builder is non-copyable and non-movable. All With*() and Build() are lvalue ref-qualified (`&`).
 class DiagnosticServicesCollectionBuilder final
 {
   public:
     DiagnosticServicesCollectionBuilder() noexcept = default;
+
+    DiagnosticServicesCollectionBuilder(const DiagnosticServicesCollectionBuilder&) = delete;
+    DiagnosticServicesCollectionBuilder(DiagnosticServicesCollectionBuilder&&) noexcept = delete;
+    DiagnosticServicesCollectionBuilder& operator=(const DiagnosticServicesCollectionBuilder&) = delete;
+    DiagnosticServicesCollectionBuilder& operator=(DiagnosticServicesCollectionBuilder&&) noexcept = delete;
+    ~DiagnosticServicesCollectionBuilder() noexcept = default;
 
     /// Register a read-only DID handler (UDS Service 0x22).
     DiagnosticServicesCollectionBuilder& WithReadDid(std::string_view identifier,
@@ -103,6 +120,17 @@ class DiagnosticServicesCollectionBuilder final
     {
         read_dids_.emplace_back(std::string{identifier}, std::move(handler));
         return *this;
+    }
+
+    /// Register a read-only DID handler (UDS Service 0x22) — constructs the handler in-place.
+    /// @tparam T    Concrete type derived from ReadDataByIdentifier.
+    /// @tparam Args Constructor argument types forwarded to T.
+    template <typename T, typename... Args>
+    DiagnosticServicesCollectionBuilder& WithReadDid(std::string_view identifier, Args&&... args) &
+    {
+        static_assert(std::is_base_of_v<ReadDataByIdentifier, T>,
+                      "T must derive from score::mw::diag::uds::ReadDataByIdentifier");
+        return WithReadDid(identifier, std::make_unique<T>(std::forward<Args>(args)...));
     }
 
     /// Register a write-only DID handler (UDS Service 0x2E).
@@ -113,12 +141,34 @@ class DiagnosticServicesCollectionBuilder final
         return *this;
     }
 
+    /// Register a write-only DID handler (UDS Service 0x2E) — constructs the handler in-place.
+    /// @tparam T    Concrete type derived from WriteDataByIdentifier.
+    /// @tparam Args Constructor argument types forwarded to T.
+    template <typename T, typename... Args>
+    DiagnosticServicesCollectionBuilder& WithWriteDid(std::string_view identifier, Args&&... args) &
+    {
+        static_assert(std::is_base_of_v<WriteDataByIdentifier, T>,
+                      "T must derive from score::mw::diag::uds::WriteDataByIdentifier");
+        return WithWriteDid(identifier, std::make_unique<T>(std::forward<Args>(args)...));
+    }
+
     /// Register a combined read+write DID handler (supports both 0x22 and 0x2E).
     DiagnosticServicesCollectionBuilder& WithDataId(std::string_view identifier,
                                                     std::unique_ptr<GenericDataIdentifier> handler) &
     {
         data_ids_.emplace_back(std::string{identifier}, std::move(handler));
         return *this;
+    }
+
+    /// Register a combined read+write DID handler (0x22 + 0x2E) — constructs the handler in-place.
+    /// @tparam T    Concrete type derived from GenericDataIdentifier.
+    /// @tparam Args Constructor argument types forwarded to T.
+    template <typename T, typename... Args>
+    DiagnosticServicesCollectionBuilder& WithDataId(std::string_view identifier, Args&&... args) &
+    {
+        static_assert(std::is_base_of_v<GenericDataIdentifier, T>,
+                      "T must derive from score::mw::diag::uds::GenericDataIdentifier");
+        return WithDataId(identifier, std::make_unique<T>(std::forward<Args>(args)...));
     }
 
     /// Register a RoutineControl handler (UDS Service 0x31).
@@ -129,6 +179,17 @@ class DiagnosticServicesCollectionBuilder final
         return *this;
     }
 
+    /// Register a RoutineControl handler (UDS Service 0x31) — constructs the handler in-place.
+    /// @tparam T    Concrete type derived from RoutineControl.
+    /// @tparam Args Constructor argument types forwarded to T.
+    template <typename T, typename... Args>
+    DiagnosticServicesCollectionBuilder& WithRoutine(std::string_view identifier, Args&&... args) &
+    {
+        static_assert(std::is_base_of_v<RoutineControl, T>,
+                      "T must derive from score::mw::diag::uds::RoutineControl");
+        return WithRoutine(identifier, std::make_unique<T>(std::forward<Args>(args)...));
+    }
+
     /// Register a raw UDS service handler for proprietary or vendor-specific services.
     DiagnosticServicesCollectionBuilder& WithGenericService(std::string_view identifier,
                                                             std::unique_ptr<GenericService> service) &
@@ -137,9 +198,20 @@ class DiagnosticServicesCollectionBuilder final
         return *this;
     }
 
+    /// Register a raw UDS handler — constructs the handler in-place.
+    /// @tparam T    Concrete type derived from GenericService.
+    /// @tparam Args Constructor argument types forwarded to T.
+    template <typename T, typename... Args>
+    DiagnosticServicesCollectionBuilder& WithGenericService(std::string_view identifier, Args&&... args) &
+    {
+        static_assert(std::is_base_of_v<GenericService, T>,
+                      "T must derive from score::mw::diag::uds::GenericService");
+        return WithGenericService(identifier, std::make_unique<T>(std::forward<Args>(args)...));
+    }
+
     /// Validate and finalise the collection.
     ///
-    /// Validation rule: no registered handler pointer may be nullptr.
+    /// Fails with `ConditionsNotCorrect` if any registered handler pointer is nullptr.
     /// Duplicate identifiers are not rejected — see the class-level note.
     ///
     /// On success all handlers are moved into a new DiagnosticServicesCollection and
@@ -171,12 +243,6 @@ class DiagnosticServicesCollectionBuilder final
 
         return collection;
     }
-
-    DiagnosticServicesCollectionBuilder(const DiagnosticServicesCollectionBuilder&) = delete;
-    DiagnosticServicesCollectionBuilder(DiagnosticServicesCollectionBuilder&&) noexcept = delete;
-    DiagnosticServicesCollectionBuilder& operator=(const DiagnosticServicesCollectionBuilder&) = delete;
-    DiagnosticServicesCollectionBuilder& operator=(DiagnosticServicesCollectionBuilder&&) noexcept = delete;
-    ~DiagnosticServicesCollectionBuilder() noexcept = default;
 
   private:
     template <typename Container> [[nodiscard]] static bool HasNullEntry(const Container& container) noexcept

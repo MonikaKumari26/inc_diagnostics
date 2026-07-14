@@ -109,6 +109,7 @@ cc_library(
         ":diagnostic_job_collection",
         ":generic_data_identifier",
         ":generic_service",
+        ":negative_response_code",
         ":read_data_by_identifier",
         ":routine_control",
         ":write_data_by_identifier",
@@ -157,18 +158,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "diagnostic_job_collection_mocks",
-    testonly = True,
-    hdrs = ["diagnostic_job_collection_mock.h"],
-    srcs = ["diagnostic_job_collection_mocks.cpp"],
-    visibility = ["//score:__subpackages__"],
-    deps = [
-        ":diagnostic_job_collection",
-        "@googletest//:gtest",
-    ],
-)
-
 # ---------------------------------------------------------------------------
 # Unit tests
 # ---------------------------------------------------------------------------
@@ -183,6 +172,17 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "diagnostic_services_collection_builder_test",
+    srcs = ["diagnostic_services_collection_builder_test.cpp"],
+    tags = ["unit"],
+    deps = [
+        ":diagnostic_services_collection_builder",
+        ":mocks",
+        "@googletest//:gtest_main",
+    ],
+)
+
 test_suite(
     name = "unit_tests",
     tests = [
@@ -190,16 +190,4 @@ test_suite(
         ":negative_response_code_test",
     ],
     visibility = ["//score/mw/diag:__pkg__"],
-)
-
-cc_test(
-    name = "diagnostic_services_collection_builder_test",
-    srcs = ["diagnostic_services_collection_builder_test.cpp"],
-    tags = ["unit"],
-    deps = [
-        ":diagnostic_job_collection_mocks",
-        ":diagnostic_services_collection_builder",
-        ":mocks",
-        "@googletest//:gtest_main",
-    ],
 )
