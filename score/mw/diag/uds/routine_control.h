@@ -28,11 +28,7 @@ namespace score::mw::diag::uds
 
 /// UDS RoutineControl service (See ISO 14229-1:2020, Service 0x31).
 ///
-/// Implement `Start()` and `Stop()` for every routine.
-///
-/// @note RequestResults (sub-function 0x03) is handled implicitly by the
-///       diagnostic runtime via the execution status reporting mechanism —
-///       implementors do not need to override it.
+/// Implement `Start()`, `Stop()`, and `RequestResults()` for every routine.
 class RoutineControl
 {
   public:
@@ -48,6 +44,12 @@ class RoutineControl
     ///         produces no stop reply data); NegativeResponseCode on failure.
     [[nodiscard]] virtual Result<ByteVector> Stop(ByteView input) = 0;
 
+    /// Request the routine results (sub-function 0x03).
+    /// @param input  Non-owning view of the raw input bytes accompanying the request.
+    /// @return Serialized routineStatusRecord bytes on success (empty if no result data);
+    ///         NegativeResponseCode on failure.
+    [[nodiscard]] virtual Result<ByteVector> RequestResults(ByteView input) = 0;
+
     /// Optionally provide the current routine completion percentage.
     /// @return A value in [0, 100] representing the completion percentage,
     ///         or `std::nullopt` if the routine does not support progress reporting.
@@ -59,13 +61,7 @@ class RoutineControl
         return std::nullopt;
     }
 
-    constexpr RoutineControl() = default;
     virtual ~RoutineControl() noexcept = default;
-
-    RoutineControl(const RoutineControl&) = delete;
-    RoutineControl(RoutineControl&&) noexcept = delete;
-    RoutineControl& operator=(const RoutineControl&) = delete;
-    RoutineControl& operator=(RoutineControl&&) noexcept = delete;
 };
 
 }  // namespace score::mw::diag::uds

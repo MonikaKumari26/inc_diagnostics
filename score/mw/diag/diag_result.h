@@ -14,9 +14,9 @@
 /// @file diag_result.h
 /// @brief Result<T> type alias for the diagnostic API.
 ///
-/// The error type is uds::NegativeResponseCode.
-/// A richer error variant (e.g. SOVD codes) can be introduced later by
-/// defining an Error struct here and updating the aliases.
+/// The error type is NegativeResponseCode.
+/// For SOVD support a new common error type can be added to score::mw::diag
+/// without touching existing UDS code that uses this alias.
 
 #ifndef SCORE_MW_DIAG_DIAG_RESULT_H
 #define SCORE_MW_DIAG_DIAG_RESULT_H
@@ -26,13 +26,13 @@
 #include <score/blank.hpp>
 #include <score/expected.hpp>
 
-namespace score::mw::diag
+namespace score::mw::diag::uds
 {
 
 /// Result type: either a value T or a UDS NegativeResponseCode.
 template <typename T>
-using Result = score::cpp::expected<T, uds::NegativeResponseCode>;
+using Result = score::cpp::expected<T, NegativeResponseCode>;
 
-}  // namespace score::mw::diag
+}  // namespace score::mw::diag::uds
 
 #endif  // SCORE_MW_DIAG_DIAG_RESULT_H
