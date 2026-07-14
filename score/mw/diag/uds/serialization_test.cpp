@@ -423,7 +423,7 @@ TEST(SerializedRoutineControlTest, StartInputParseFailureReturnsError)
     const auto result = ctrl.Start(ByteView{input});
 
     EXPECT_FALSE(result.has_value());
-    EXPECT_EQ(result.error(), NegativeResponseCode::ConditionsNotCorrect);
+    EXPECT_EQ(result.error(), NegativeResponseCode::IncorrectMessageLengthOrInvalidFormat);
 }
 
 TEST(SerializedRoutineControlTest, StartHandlerErrorIsPropagated)
@@ -493,7 +493,7 @@ TEST(SerializedRoutineControlTest, StopInputParseFailureReturnsError)
     const auto result = ctrl.Stop(ByteView{input});
 
     EXPECT_FALSE(result.has_value());
-    EXPECT_EQ(result.error(), NegativeResponseCode::ConditionsNotCorrect);
+    EXPECT_EQ(result.error(), NegativeResponseCode::IncorrectMessageLengthOrInvalidFormat);
 }
 
 TEST(SerializedRoutineControlTest, StopHandlerErrorIsPropagated)

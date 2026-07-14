@@ -19,7 +19,8 @@
 ///   - `SerializedReadDataByIdentifier<T>`       — read-only DID (Service 0x22)
 ///   - `SerializedWriteDataByIdentifier<T,H>`    — write-only DID (Service 0x2E)
 ///   - `SerializedGenericDataIdentifier<T,H>`    — combined read+write DID (0x22 + 0x2E)
-///   - `SerializedRoutineControl<T,H>`           — RoutineControl adapter (Service 0x31)
+///   - `SerializedRoutineControl<T,H>`           — RoutineControl adapter (Service 0x31;
+///                                                  Start, Stop, RequestResults)
 ///
 /// Free helper: `DeserializeRequest<T>(ByteView, Callable)`.
 ///
@@ -212,6 +213,8 @@ class SerializedGenericDataIdentifier final : public GenericDataIdentifier
 ///
 /// `Stop(input)`: same deserialization pattern → calls `HandlerImpl::Stop()` → serializes reply.
 ///
+/// `RequestResults(input)`: same deserialization pattern → calls `HandlerImpl::RequestResults()` → serializes reply.
+///
 /// Requires: `DataPayload` derives from `Serializable` and provides `FromBytes(ByteView)`;
 ///           `HandlerImpl` derives from `RoutineHandler<DataPayload>`.
 template <typename DataPayload, typename HandlerImpl>
@@ -282,6 +285,36 @@ class SerializedRoutineControl final : public RoutineControl
         }
 
         auto serialized_reply = stop_outcome->value().Serialize();
+
+        if (!serialized_reply.has_value())
+        {
+            return Result<ByteVector>(score::cpp::make_unexpected(NegativeResponseCode::FailurePreventsExecutionOfRequestedAction));
+        }
+
+        return std::move(*serialized_reply);
+    }
+
+    [[nodiscard]] Result<ByteVector> RequestResults(ByteView input) override
+    {
+        auto deserialized_params = DeserializeOptionalInput(input);
+        if (!deserialized_params.has_value())
+        {
+            return Result<ByteVector>(score::cpp::make_unexpected(deserialized_params.error()));
+        }
+
+        auto results_outcome = handler_.RequestResults(std::move(*deserialized_params));
+
+        if (!results_outcome.has_value())
+        {
+            return Result<ByteVector>(score::cpp::make_unexpected(results_outcome.error()));
+        }
+
+        if (!results_outcome->has_value())
+        {
+            return ByteVector{};
+        }
+
+        auto serialized_reply = results_outcome->value().Serialize();
 
         if (!serialized_reply.has_value())
         {

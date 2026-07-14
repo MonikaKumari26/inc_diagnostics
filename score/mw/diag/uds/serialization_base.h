@@ -74,13 +74,6 @@ class Serializable
     [[nodiscard]] virtual Result<ByteVector> Serialize() const = 0;
 
     virtual ~Serializable() noexcept = default;
-
-  protected:
-    constexpr Serializable() = default;
-    Serializable(const Serializable&) = default;
-    Serializable(Serializable&&) noexcept = default;
-    Serializable& operator=(const Serializable&) & = default;
-    Serializable& operator=(Serializable&&) & noexcept = default;
 };
 
 /************************************/
@@ -100,13 +93,6 @@ template <typename DataPayload> class WriteHandler
     [[nodiscard]] virtual Result<score::cpp::blank> HandleWrite(DataPayload value) = 0;
 
     virtual ~WriteHandler() noexcept = default;
-
-  protected:
-    constexpr WriteHandler() = default;
-    WriteHandler(const WriteHandler&) = default;
-    WriteHandler(WriteHandler&&) noexcept = default;
-    WriteHandler& operator=(const WriteHandler&) & = default;
-    WriteHandler& operator=(WriteHandler&&) & noexcept = default;
 };
 
 /************************************/
@@ -135,6 +121,15 @@ template <typename DataPayload> class RoutineHandler
             score::cpp::make_unexpected(NegativeResponseCode::SubFunctionNotSupported));
     }
 
+    /// Request the current routine results with optional typed parameters.
+    /// @param input  Deserialized request parameters (absent if the tester sent no payload).
+    ///               Passed by value — implementations may move from it.
+    [[nodiscard]] virtual Result<std::optional<DataPayload>> RequestResults(std::optional<DataPayload> /*input*/)
+    {
+        return Result<std::optional<DataPayload>>(
+            score::cpp::make_unexpected(NegativeResponseCode::SubFunctionNotSupported));
+    }
+
     /// Current completion percentage [0, 100], or nullopt if unavailable.
     [[nodiscard]] virtual std::optional<std::uint8_t> CompletionPercentage() const noexcept
     {
@@ -142,13 +137,6 @@ template <typename DataPayload> class RoutineHandler
     }
 
     virtual ~RoutineHandler() noexcept = default;
-
-  protected:
-    constexpr RoutineHandler() = default;
-    RoutineHandler(const RoutineHandler&) = default;
-    RoutineHandler(RoutineHandler&&) noexcept = default;
-    RoutineHandler& operator=(const RoutineHandler&) & = default;
-    RoutineHandler& operator=(RoutineHandler&&) & noexcept = default;
 };
 
 }  // namespace score::mw::diag::uds

@@ -117,8 +117,6 @@ cc_library(
         ":routine_control",
         ":serialization_base",
         ":write_data_by_identifier",
-        "//score/mw/diag:byte_types",
-        "//score/mw/diag:diag_result",
     ],
 )
 
@@ -162,18 +160,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "serialization_mocks",
-    testonly = True,
-    hdrs = ["serialization_mock.h"],
-    srcs = ["serialization_mocks.cpp"],
-    visibility = ["//score:__subpackages__"],
-    deps = [
-        ":serialization_base",
-        "@googletest//:gtest",
-    ],
-)
-
 # ---------------------------------------------------------------------------
 # Unit tests
 # ---------------------------------------------------------------------------
@@ -188,15 +174,6 @@ cc_test(
     ],
 )
 
-test_suite(
-    name = "unit_tests",
-    tests = [
-        ":negative_response_code_test",
-        ":serialization_test",
-    ],
-    visibility = ["//score/mw/diag:__pkg__"],
-)
-
 cc_test(
     name = "serialization_test",
     srcs = ["serialization_test.cpp"],
@@ -205,4 +182,13 @@ cc_test(
         ":serialization",
         "@googletest//:gtest_main",
     ],
+)
+
+test_suite(
+    name = "unit_tests",
+    tests = [
+        ":negative_response_code_test",
+        ":serialization_test",
+    ],
+    visibility = ["//score/mw/diag:__pkg__"],
 )
