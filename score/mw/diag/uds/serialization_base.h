@@ -50,10 +50,11 @@ namespace detail
 /// returning `Result<T>`.
 /// Used in static_assert to give a clear error when a DataPayload type is missing
 /// the required deserialization entry point, instead of a deep template instantiation error.
-template <typename T, typename = void>
-struct HasFromBytesFactory : std::false_type {};
+template<typename T, typename = void> struct HasFromBytesFactory : std::false_type
+{
+};
 
-template <typename T>
+template<typename T>
 struct HasFromBytesFactory<T, std::void_t<decltype(T::FromBytes(std::declval<ByteView>()))>>
     : std::bool_constant<std::is_same_v<decltype(T::FromBytes(std::declval<ByteView>())), Result<T>>> {};
 }  // namespace detail
@@ -84,7 +85,7 @@ class Serializable
 ///
 /// Implement this and pass it to `SerializedWriteDataByIdentifier<DataPayload, HandlerImpl>`
 /// or `SerializedGenericDataIdentifier<DataPayload, HandlerImpl>`.
-template <typename DataPayload> class WriteHandler
+template<typename DataPayload> class WriteHandler
 {
   public:
     /// Process the deserialized write value.
@@ -104,7 +105,7 @@ template <typename DataPayload> class WriteHandler
 /// Implement this and pass it to `SerializedRoutineControl<DataPayload, HandlerImpl>`.
 /// `Start()` is mandatory — every routine must handle it. `Stop()` and
 /// `CompletionPercentage()` have default implementations and may be left unoverridden.
-template <typename DataPayload> class RoutineHandler
+template<typename DataPayload> class RoutineHandler
 {
   public:
     /// Start the routine with optional typed parameters.

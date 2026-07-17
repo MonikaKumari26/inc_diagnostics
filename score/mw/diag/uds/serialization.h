@@ -54,7 +54,7 @@ namespace score::mw::diag::uds
 ///       Every `Read()` call serializes the same stored instance. If the diagnostic
 ///       data must reflect live/changing state, implement `ReadDataByIdentifier` directly
 ///       and call your data source inside `Read()` instead of using this adapter.
-template <typename DataPayload>
+template<typename DataPayload>
 class SerializedReadDataByIdentifier final : public ReadDataByIdentifier
 {
     static_assert(std::is_base_of_v<Serializable, DataPayload>,
@@ -95,7 +95,7 @@ class SerializedReadDataByIdentifier final : public ReadDataByIdentifier
 ///
 /// Requires: `DataPayload::FromBytes(ByteView)` → `Result<DataPayload>` static factory;
 ///           `HandlerImpl` must derive from `WriteHandler<DataPayload>`.
-template <typename DataPayload, typename HandlerImpl>
+template<typename DataPayload, typename HandlerImpl>
 class SerializedWriteDataByIdentifier final : public WriteDataByIdentifier
 {
     static_assert(std::is_base_of_v<WriteHandler<DataPayload>, HandlerImpl>,
@@ -152,7 +152,7 @@ class SerializedWriteDataByIdentifier final : public WriteDataByIdentifier
 ///
 /// Requires: `DataPayload` derives from `Serializable` and provides `FromBytes(ByteView)`;
 ///           `WriteHandlerImpl` derives from `WriteHandler<DataPayload>`.
-template <typename DataPayload, typename WriteHandlerImpl>
+template<typename DataPayload, typename WriteHandlerImpl>
 class SerializedGenericDataIdentifier final : public GenericDataIdentifier
 {
     static_assert(std::is_base_of_v<Serializable, DataPayload>,
@@ -217,7 +217,7 @@ class SerializedGenericDataIdentifier final : public GenericDataIdentifier
 ///
 /// Requires: `DataPayload` derives from `Serializable` and provides `FromBytes(ByteView)`;
 ///           `HandlerImpl` derives from `RoutineHandler<DataPayload>`.
-template <typename DataPayload, typename HandlerImpl>
+template<typename DataPayload, typename HandlerImpl>
 class SerializedRoutineControl final : public RoutineControl
 {
     static_assert(std::is_base_of_v<Serializable, DataPayload>,
@@ -340,8 +340,7 @@ class SerializedRoutineControl final : public RoutineControl
     /// Deserialize a raw input into an optional typed DataPayload.
     /// Returns Ok(nullopt) when input is empty (no parameters sent),
     /// Ok(value) on successful parse, or Err(IncorrectMessageLengthOrInvalidFormat) on parse failure.
-    [[nodiscard]] static Result<std::optional<DataPayload>>
-    DeserializeOptionalInput(ByteView input)
+    [[nodiscard]] static Result<std::optional<DataPayload>> DeserializeOptionalInput(ByteView input)
     {
         if (input.empty())
         {
@@ -366,7 +365,7 @@ class SerializedRoutineControl final : public RoutineControl
 /// invoke `handler(typedValue)`. Any parse failure is normalized to
 /// `IncorrectMessageLengthOrInvalidFormat` before being returned.
 /// `Callable` must accept `RequestPayload` and return `Result<score::cpp::blank>`.
-template <typename RequestPayload, typename Callable>
+template<typename RequestPayload, typename Callable>
 Result<score::cpp::blank> DeserializeRequest(ByteView data, Callable&& on_parsed)
 {
     static_assert(detail::HasFromBytesFactory<RequestPayload>::value,
