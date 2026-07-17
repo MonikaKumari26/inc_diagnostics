@@ -120,18 +120,31 @@ TEST(DiagnosticServicesCollectionBuilderTest, MultipleHandlersPerTypeSucceed)
     EXPECT_TRUE(result.has_value());
 }
 
-TEST(DiagnosticServicesCollectionBuilderTest, DuplicateIdentifierAcrossHandlerTypesIsAccepted)
+// ── DiagnosticServicesCollectionBuilder — duplicate identifier failure paths ──
+
+TEST(DiagnosticServicesCollectionBuilderTest, DuplicateIdentifierWithinSameTypeIsRejected)
 {
-    // The builder does not validate duplicate identifiers across handler types.
-    // Dispatch ambiguity is the ServiceRegistrar's responsibility (see class doc).
     DiagnosticServicesCollectionBuilder builder{};
     builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>());
-    builder.WithWriteDid("F190", std::make_unique<test::WriteDataByIdentifierMock>());
-    builder.WithDataId("F190", std::make_unique<test::GenericDataIdentifierMock>());
+    builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>());
 
     auto result = builder.Build();
 
-    EXPECT_TRUE(result.has_value());
+    ASSERT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), NegativeResponseCode::ConditionsNotCorrect);
+}
+
+TEST(DiagnosticServicesCollectionBuilderTest, DuplicateIdentifierAcrossHandlerTypesIsRejected)
+{
+    // FIX: Builder now correctly rejects duplicate identifiers at build time.
+    DiagnosticServicesCollectionBuilder builder{};
+    builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>());
+    builder.WithWriteDid("F190", std::make_unique<test::WriteDataByIdentifierMock>());
+
+    auto result = builder.Build();
+
+    ASSERT_FALSE(result.has_value());
+    EXPECT_EQ(result.error(), NegativeResponseCode::ConditionsNotCorrect);
 }
 
 // ── DiagnosticServicesCollectionBuilder — null-handler failure paths ──────────
@@ -204,6 +217,43 @@ TEST(DiagnosticServicesCollectionBuilderTest, NullHandlerMixedWithValidHandlerFa
     EXPECT_EQ(result.error(), NegativeResponseCode::ConditionsNotCorrect);
 }
 
+// ── DiagnosticServicesCollection — Public Get API Verification ────────────────
+
+TEST(DiagnosticServicesCollectionBuilderTest, PublicGetAPIsExposeRegisteredHandlers)
+{
+    // FIX: Added validation tests to verify structural transparency via public const accessors
+    DiagnosticServicesCollectionBuilder builder{};
+    builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>())
+        .WithWriteDid("F191", std::make_unique<test::WriteDataByIdentifierMock>())
+        .WithDataId("F192", std::make_unique<test::GenericDataIdentifierMock>())
+        .WithRoutine("0301", std::make_unique<test::RoutineControlMock>())
+        .WithGenericService("B200", std::make_unique<test::GenericServiceMock>());
+
+    auto result = builder.Build();
+    ASSERT_TRUE(result.has_value());
+    const auto& collection = *result;
+
+    ASSERT_EQ(collection->GetReadDids().size(), 1U);
+    EXPECT_EQ(collection->GetReadDids()[0].first, "F190");
+    EXPECT_NE(collection->GetReadDids()[0].second, nullptr);
+
+    ASSERT_EQ(collection->GetWriteDids().size(), 1U);
+    EXPECT_EQ(collection->GetWriteDids()[0].first, "F191");
+    EXPECT_NE(collection->GetWriteDids()[0].second, nullptr);
+
+    ASSERT_EQ(collection->GetGenericDataIds().size(), 1U);
+    EXPECT_EQ(collection->GetGenericDataIds()[0].first, "F192");
+    EXPECT_NE(collection->GetGenericDataIds()[0].second, nullptr);
+
+    ASSERT_EQ(collection->GetRoutines().size(), 1U);
+    EXPECT_EQ(collection->GetRoutines()[0].first, "0301");
+    EXPECT_NE(collection->GetRoutines()[0].second, nullptr);
+
+    ASSERT_EQ(collection->GetGenericServices().size(), 1U);
+    EXPECT_EQ(collection->GetGenericServices()[0].first, "B200");
+    EXPECT_NE(collection->GetGenericServices()[0].second, nullptr);
+}
+
 // ── DiagnosticServicesCollectionBuilder — post-build state ───────────────────
 
 TEST(DiagnosticServicesCollectionBuilderTest, BuildResultIsUsableAsDiagnosticJobCollection)
@@ -235,10 +285,7 @@ struct ConcreteReadHandler final : public ReadDataByIdentifier
 struct ConcreteWriteHandler final : public WriteDataByIdentifier
 {
     explicit ConcreteWriteHandler(int) {}
-    Result<score::cpp::blank> Write(ByteView) override
-    {
-        return score::cpp::blank{};
-    }
+    Result<score::cpp::blank> Write(ByteView) override { return score::cpp::blank{}; }
 };
 
 struct ConcreteDataIdHandler final : public GenericDataIdentifier
