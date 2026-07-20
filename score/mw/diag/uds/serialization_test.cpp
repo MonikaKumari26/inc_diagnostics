@@ -16,7 +16,6 @@
 ///        score/mw/diag/uds/serialization.h
 
 #include "score/mw/diag/uds/serialization.h"
-#include "score/mw/diag/uds/meta_data.h"
 
 #include <gtest/gtest.h>
 
