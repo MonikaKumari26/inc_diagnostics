@@ -34,6 +34,31 @@ cc_library(
 )
 
 cc_library(
+    name = "diagnostic_job_collection",
+    hdrs = ["diagnostic_job_collection.h"],
+    srcs = ["diagnostic_job_collection.cpp"],
+    visibility = ["//score:__subpackages__"],
+)
+
+cc_library(
+    name = "diagnostic_services_collection_builder",
+    hdrs = ["diagnostic_services_collection_builder.h"],
+    srcs = ["diagnostic_services_collection_builder.cpp"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        ":diagnostic_job_collection",
+        ":generic_data_identifier",
+        ":generic_service",
+        ":negative_response_code",
+        ":read_data_by_identifier",
+        ":routine_control",
+        ":write_data_by_identifier",
+        "//score/mw/diag:diag_result",
+        "@score_baselibs//score/language/futurecpp",
+    ],
+)
+
+cc_library(
     name = "generic_service",
     hdrs = ["generic_service.h"],
     srcs = ["generic_service.cpp"],
@@ -90,31 +115,6 @@ cc_library(
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
         ":meta_data",
-    ],
-)
-
-cc_library(
-    name = "diagnostic_job_collection",
-    hdrs = ["diagnostic_job_collection.h"],
-    srcs = ["diagnostic_job_collection.cpp"],
-    visibility = ["//score:__subpackages__"],
-)
-
-cc_library(
-    name = "diagnostic_services_collection_builder",
-    hdrs = ["diagnostic_services_collection_builder.h"],
-    srcs = ["diagnostic_services_collection_builder.cpp"],
-    visibility = ["//score:__subpackages__"],
-    deps = [
-        ":diagnostic_job_collection",
-        ":generic_data_identifier",
-        ":generic_service",
-        ":negative_response_code",
-        ":read_data_by_identifier",
-        ":routine_control",
-        ":write_data_by_identifier",
-        "//score/mw/diag:diag_result",
-        "@score_baselibs//score/language/futurecpp",
     ],
 )
 

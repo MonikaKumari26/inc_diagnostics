@@ -136,7 +136,6 @@ TEST(DiagnosticServicesCollectionBuilderTest, DuplicateIdentifierWithinSameTypeI
 
 TEST(DiagnosticServicesCollectionBuilderTest, DuplicateIdentifierAcrossHandlerTypesIsRejected)
 {
-    // FIX: Builder now correctly rejects duplicate identifiers at build time.
     DiagnosticServicesCollectionBuilder builder{};
     builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>());
     builder.WithWriteDid("F190", std::make_unique<test::WriteDataByIdentifierMock>());
@@ -221,7 +220,6 @@ TEST(DiagnosticServicesCollectionBuilderTest, NullHandlerMixedWithValidHandlerFa
 
 TEST(DiagnosticServicesCollectionBuilderTest, PublicGetAPIsExposeRegisteredHandlers)
 {
-    // FIX: Added validation tests to verify structural transparency via public const accessors
     DiagnosticServicesCollectionBuilder builder{};
     builder.WithReadDid("F190", std::make_unique<test::ReadDataByIdentifierMock>())
         .WithWriteDid("F191", std::make_unique<test::WriteDataByIdentifierMock>())
@@ -273,16 +271,18 @@ TEST(DiagnosticServicesCollectionBuilderTest, BuildResultIsUsableAsDiagnosticJob
 
 // ── In-place construction overloads ─────────────────────────────────────────
 
+// ── In-place construction overloads ─────────────────────────────────────────
+
 namespace
 {
 
-struct ConcreteReadHandler final : public ReadDataByIdentifier
+struct ConcreteReadHandler final : public SimpleReadDataByIdentifier
 {
     explicit ConcreteReadHandler(int) {}
     Result<ByteVector> Read() override { return ByteVector{}; }
 };
 
-struct ConcreteWriteHandler final : public WriteDataByIdentifier
+struct ConcreteWriteHandler final : public SimpleWriteDataByIdentifier
 {
     explicit ConcreteWriteHandler(int) {}
     Result<score::cpp::blank> Write(ByteView) override { return score::cpp::blank{}; }
@@ -291,11 +291,24 @@ struct ConcreteWriteHandler final : public WriteDataByIdentifier
 struct ConcreteDataIdHandler final : public GenericDataIdentifier
 {
     explicit ConcreteDataIdHandler(int) {}
-    Result<ByteVector> Read() override { return ByteVector{}; }
-    Result<score::cpp::blank> Write(ByteView) override { return score::cpp::blank{}; }
+
+    Result<ByteVector> Read(
+        const MetaData& /*meta_data*/,
+        score::cpp::stop_token /*stop_token*/ = {}) override
+    {
+        return ByteVector{};
+    }
+
+    Result<score::cpp::blank> Write(
+        ByteView /*input*/,
+        const MetaData& /*meta_data*/,
+        score::cpp::stop_token /*stop_token*/ = {}) override
+    {
+        return score::cpp::blank{};
+    }
 };
 
-struct ConcreteRoutineHandler final : public RoutineControl
+struct ConcreteRoutineHandler final : public SimpleRoutineControl
 {
     explicit ConcreteRoutineHandler(int) {}
     Result<ByteVector> Start(ByteView) override { return ByteVector{}; }
@@ -303,7 +316,7 @@ struct ConcreteRoutineHandler final : public RoutineControl
     Result<ByteVector> RequestResults(ByteView) override { return ByteVector{}; }
 };
 
-struct ConcreteGenericService final : public GenericService
+struct ConcreteGenericService final : public SimpleGenericService
 {
     explicit ConcreteGenericService(int) {}
     Result<ByteVector> HandleMessage(ByteView) override { return ByteVector{}; }
