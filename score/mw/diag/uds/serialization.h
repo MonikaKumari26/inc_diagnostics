@@ -46,7 +46,7 @@ namespace score::mw::diag::uds
 /* SerializedReadDataByIdentifier<T>*/
 /************************************/
 
-/// Adapts a `Serializable` `DataPayload` to the `ReadDataByIdentifier` interface.
+/// Adapts a `Serializable` `DataPayload` to the `SimpleReadDataByIdentifier` interface.
 /// Owns the value and returns `DataPayload::Serialize()` on each `Read()` call.
 /// `DataPayload` must derive from `Serializable`.
 ///
@@ -55,7 +55,7 @@ namespace score::mw::diag::uds
 ///       data must reflect live/changing state, implement `ReadDataByIdentifier` directly
 ///       and call your data source inside `Read()` instead of using this adapter.
 template<typename DataPayload>
-class SerializedReadDataByIdentifier final : public ReadDataByIdentifier
+class SerializedReadDataByIdentifier final : public SimpleReadDataByIdentifier
 {
     static_assert(std::is_base_of_v<Serializable, DataPayload>,
                   "DataPayload must derive from score::mw::diag::uds::Serializable");
@@ -67,7 +67,10 @@ class SerializedReadDataByIdentifier final : public ReadDataByIdentifier
     {
     }
 
-    [[nodiscard]] Result<ByteVector> Read() override { return serializable_value_.Serialize(); }
+    [[nodiscard]] Result<ByteVector> Read() override
+    {
+        return serializable_value_.Serialize();
+    }
 
     ~SerializedReadDataByIdentifier() noexcept override = default;
 
@@ -85,7 +88,7 @@ class SerializedReadDataByIdentifier final : public ReadDataByIdentifier
 /* <DataPayload, HandlerImpl>        */
 /*************************************/
 
-/// Adapts a `WriteHandler<DataPayload>` to the `WriteDataByIdentifier` interface.
+/// Adapts a `WriteHandler<DataPayload>` to the `SimpleWriteDataByIdentifier` interface.
 ///
 /// On `Write(input)`: calls `DataPayload::FromBytes(input)`, then on success
 /// calls `HandlerImpl::HandleWrite(typedValue)`.
@@ -96,7 +99,7 @@ class SerializedReadDataByIdentifier final : public ReadDataByIdentifier
 /// Requires: `DataPayload::FromBytes(ByteView)` → `Result<DataPayload>` static factory;
 ///           `HandlerImpl` must derive from `WriteHandler<DataPayload>`.
 template<typename DataPayload, typename HandlerImpl>
-class SerializedWriteDataByIdentifier final : public WriteDataByIdentifier
+class SerializedWriteDataByIdentifier final : public SimpleWriteDataByIdentifier
 {
     static_assert(std::is_base_of_v<WriteHandler<DataPayload>, HandlerImpl>,
                   "HandlerImpl must derive from score::mw::diag::uds::WriteHandler<DataPayload>");
@@ -135,12 +138,12 @@ class SerializedWriteDataByIdentifier final : public WriteDataByIdentifier
 
 /*************************************/
 /* SerializedGenericDataIdentifier   */
-/* <DataPayload, HandlerImpl>        */
+/* <DataPayload, WriteHandlerImpl>   */
 /*************************************/
 
 /// Adapts a `Serializable` `DataPayload` and a `WriteHandler<DataPayload>` to the
-/// `GenericDataIdentifier` interface, covering both UDS Service 0x22 (read) and
-/// Service 0x2E (write) through a single typed adapter.
+/// `SimpleReadDataByIdentifier` and `SimpleWriteDataByIdentifier` interfaces,
+/// covering both UDS Service 0x22 (read) and Service 0x2E (write) through a single typed adapter.
 ///
 /// On `Read()`:        returns `DataPayload::Serialize()` of the owned value.
 /// On `Write(input)`:  calls `DataPayload::FromBytes(input)`, then on success
@@ -153,7 +156,8 @@ class SerializedWriteDataByIdentifier final : public WriteDataByIdentifier
 /// Requires: `DataPayload` derives from `Serializable` and provides `FromBytes(ByteView)`;
 ///           `WriteHandlerImpl` derives from `WriteHandler<DataPayload>`.
 template<typename DataPayload, typename WriteHandlerImpl>
-class SerializedGenericDataIdentifier final : public GenericDataIdentifier
+class SerializedGenericDataIdentifier final : public SimpleReadDataByIdentifier,
+                                               public SimpleWriteDataByIdentifier
 {
     static_assert(std::is_base_of_v<Serializable, DataPayload>,
                   "DataPayload must derive from score::mw::diag::uds::Serializable");
@@ -163,7 +167,7 @@ class SerializedGenericDataIdentifier final : public GenericDataIdentifier
                   "WriteHandlerImpl must derive from score::mw::diag::uds::WriteHandler<DataPayload>");
 
   public:
-    /// @param value         Initial readable value; returned by Read() after serialization.
+    /// @param read_value    Initial readable value; returned by Read() after serialization.
     /// @param write_handler Handler invoked with the deserialized value on each Write() call.
     explicit SerializedGenericDataIdentifier(
         DataPayload read_value,
@@ -173,7 +177,10 @@ class SerializedGenericDataIdentifier final : public GenericDataIdentifier
     {
     }
 
-    [[nodiscard]] Result<ByteVector> Read() override { return serializable_value_.Serialize(); }
+    [[nodiscard]] Result<ByteVector> Read() override
+    {
+        return serializable_value_.Serialize();
+    }
 
     [[nodiscard]] Result<score::cpp::blank> Write(ByteView input) override
     {
@@ -205,7 +212,7 @@ class SerializedGenericDataIdentifier final : public GenericDataIdentifier
 /* <DataPayload, HandlerImpl>        */
 /*************************************/
 
-/// Adapts a `RoutineHandler<DataPayload>` to the `RoutineControl` interface.
+/// Adapts a `RoutineHandler<DataPayload>` to the `SimpleRoutineControl` interface.
 ///
 /// `Start(input)`: empty input → passes `nullopt` to the handler; non-empty input →
 ///   deserializes via `DataPayload::FromBytes()`. Calls `HandlerImpl::Start()`, then
@@ -218,7 +225,7 @@ class SerializedGenericDataIdentifier final : public GenericDataIdentifier
 /// Requires: `DataPayload` derives from `Serializable` and provides `FromBytes(ByteView)`;
 ///           `HandlerImpl` derives from `RoutineHandler<DataPayload>`.
 template<typename DataPayload, typename HandlerImpl>
-class SerializedRoutineControl final : public RoutineControl
+class SerializedRoutineControl final : public SimpleRoutineControl
 {
     static_assert(std::is_base_of_v<Serializable, DataPayload>,
                   "DataPayload must derive from score::mw::diag::uds::Serializable");
@@ -374,7 +381,6 @@ Result<score::cpp::blank> DeserializeRequest(ByteView data, Callable&& on_parsed
 
     if (!parsed_request.has_value())
     {
-        // Normalize any parse error to the correct UDS wire-level NRC.
         return Result<score::cpp::blank>(score::cpp::make_unexpected(NegativeResponseCode::IncorrectMessageLengthOrInvalidFormat));
     }
 

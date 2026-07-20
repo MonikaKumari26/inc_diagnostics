@@ -165,21 +165,21 @@ cc_library(
 # ---------------------------------------------------------------------------
 
 cc_test(
-    name = "negative_response_code_test",
-    srcs = ["negative_response_code_test.cpp"],
-    tags = ["unit"],
-    deps = [
-        ":negative_response_code",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
     name = "serialization_test",
     srcs = ["serialization_test.cpp"],
     tags = ["unit"],
     deps = [
         ":serialization",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "negative_response_code_test",
+    srcs = ["negative_response_code_test.cpp"],
+    tags = ["unit"],
+    deps = [
+        ":negative_response_code",
         "@googletest//:gtest_main",
     ],
 )
