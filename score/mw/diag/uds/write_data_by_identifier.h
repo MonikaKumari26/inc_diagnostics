@@ -65,11 +65,13 @@ class SimpleWriteDataByIdentifier : public WriteDataByIdentifier
     virtual ~SimpleWriteDataByIdentifier() noexcept = default;
 
   private:
-    Result<score::cpp::blank> Write(ByteView input,
+    std::future<Result<score::cpp::blank>> Write(ByteView input,
                                     const MetaData& /*meta_data*/,
                                     score::cpp::stop_token /*stop_token*/) final
     {
-        return Write(input);
+        std::promise<Result<score::cpp::blank>> promise;
+        promise.set_value(Write(input));
+        return promise.get_future();
     }
 };
 

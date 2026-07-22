@@ -28,6 +28,8 @@
 
 #include <score/stop_token.hpp>
 
+#include <future>
+
 namespace score::mw::diag::uds
 {
 
@@ -68,11 +70,13 @@ class SimpleGenericService : public GenericService
     virtual ~SimpleGenericService() noexcept = default;
 
   private:
-    Result<ByteVector> HandleMessage(ByteView input,
+    std::future<Result<ByteVector>> HandleMessage(ByteView input,
                                      const MetaData& /*meta_data*/,
                                      score::cpp::stop_token /*stop_token*/) final
     {
-        return HandleMessage(input);
+        std::promise<Result<ByteVector>> promise;
+        promise.set_value(HandleMessage(input));
+        return promise.get_future();
     }
 };
 
