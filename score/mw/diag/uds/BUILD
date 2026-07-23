@@ -159,11 +159,3 @@ test_suite(
     ],
     visibility = ["//score/mw/diag:__pkg__"],
 )
-
-test_suite(
-    name = "unit_tests",
-    tests = [
-        ":negative_response_code_test",
-    ],
-    visibility = ["//score/mw/diag:__pkg__"],
-)

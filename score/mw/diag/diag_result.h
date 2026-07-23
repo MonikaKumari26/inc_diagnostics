@@ -21,12 +21,6 @@
 #ifndef SCORE_MW_DIAG_DIAG_RESULT_H
 #define SCORE_MW_DIAG_DIAG_RESULT_H
 
-<<<<<<< HEAD
-=======
-#include "score/mw/diag/byte_types.h"
-#include "score/mw/diag/uds/negative_response_code.h"
-
->>>>>>> 71e6d8e (replace deprecated score::cpp::blank with Result<void>)
 #include "score/result/result.h"
 
 namespace score::mw::diag::uds
@@ -34,15 +28,7 @@ namespace score::mw::diag::uds
 
 /// Result type: either a success value T or a score::result::Error with NegativeResponseCode as the error type.
 template <typename T>
-<<<<<<< HEAD
-<<<<<<< HEAD
 using Result = score::Result<T>;
-=======
-using Result = score::cpp::expected<T, NegativeResponseCode>;
->>>>>>> ff4464f (removed redundant members, added cpp files for byte_types and diag_result)
-=======
-using Result = score::Result<T>;
->>>>>>> 71e6d8e (replace deprecated score::cpp::blank with Result<void>)
 
 }  // namespace score::mw::diag::uds
 
