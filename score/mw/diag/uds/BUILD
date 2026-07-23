@@ -93,6 +93,33 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "serialization_base",
+    hdrs = ["serialization_base.h"],
+    srcs = ["serialization_base.cpp"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        ":negative_response_code",
+        "//score/mw/diag:byte_types",
+        "//score/mw/diag:diag_result",
+        "@score_baselibs//score/language/futurecpp",
+    ],
+)
+
+cc_library(
+    name = "serialization",
+    hdrs = ["serialization.h"],
+    srcs = ["serialization.cpp"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        ":generic_data_identifier",
+        ":read_data_by_identifier",
+        ":routine_control",
+        ":serialization_base",
+        ":write_data_by_identifier",
+    ],
+)
+
 # Umbrella: depends on all individual targets above. Use this when you need
 # the full UDS interface set, or as a migration path from the old monolithic target.
 cc_library(
@@ -138,6 +165,16 @@ cc_library(
 # ---------------------------------------------------------------------------
 
 cc_test(
+    name = "serialization_test",
+    srcs = ["serialization_test.cpp"],
+    tags = ["unit"],
+    deps = [
+        ":serialization",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "negative_response_code_test",
     srcs = ["negative_response_code_test.cpp"],
     tags = ["unit"],
@@ -151,6 +188,7 @@ test_suite(
     name = "unit_tests",
     tests = [
         ":negative_response_code_test",
+        ":serialization_test",
     ],
     visibility = ["//score/mw/diag:__pkg__"],
 )
