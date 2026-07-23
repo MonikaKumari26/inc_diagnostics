@@ -75,7 +75,7 @@ class DTC
     /// @brief Report the fault status for one monitoring cycle.
     /// @param status Outcome of the current monitoring cycle (kPassed or kFailed).
     /// @return Ok on success; Err if the middleware could not process the report.
-    [[nodiscard]] virtual Result<score::cpp::blank> Report(Status status) = 0;
+    [[nodiscard]] virtual Result<void> Report(Status status) = 0;
 
     /// @brief Set the clearing behaviour for this DTC.
     /// @param behaviour One of ClearBehaviour::kClearable (default), kNotClearable,

@@ -28,7 +28,7 @@ namespace score::mw::diag::dtc::test
 class DTCMock : public DTC
 {
   public:
-    MOCK_METHOD((Result<score::cpp::blank>), Report, (Status status), (override));
+    MOCK_METHOD((Result<void>), Report, (Status status), (override));
     MOCK_METHOD(void, SetClearBehaviour, (ClearBehaviour behaviour), (noexcept, override));
     MOCK_METHOD((Result<std::uint32_t>), GetNumber, (FormatType format), (const, noexcept, override));
     MOCK_METHOD(void, OnInit, (score::cpp::move_only_function<void(InitReason)> callback),
