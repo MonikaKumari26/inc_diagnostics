@@ -34,6 +34,31 @@ cc_library(
 )
 
 cc_library(
+    name = "diagnostic_job_collection",
+    hdrs = ["diagnostic_job_collection.h"],
+    srcs = ["diagnostic_job_collection.cpp"],
+    visibility = ["//score:__subpackages__"],
+)
+
+cc_library(
+    name = "diagnostic_services_collection_builder",
+    hdrs = ["diagnostic_services_collection_builder.h"],
+    srcs = ["diagnostic_services_collection_builder.cpp"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        ":diagnostic_job_collection",
+        ":generic_data_identifier",
+        ":generic_service",
+        ":negative_response_code",
+        ":read_data_by_identifier",
+        ":routine_control",
+        ":write_data_by_identifier",
+        "//score/mw/diag:diag_result",
+        "@score_baselibs//score/language/futurecpp",
+    ],
+)
+
+cc_library(
     name = "generic_service",
     hdrs = ["generic_service.h"],
     srcs = ["generic_service.cpp"],
@@ -147,9 +172,21 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "diagnostic_services_collection_builder_test",
+    srcs = ["diagnostic_services_collection_builder_test.cpp"],
+    tags = ["unit"],
+    deps = [
+        ":diagnostic_services_collection_builder",
+        ":mocks",
+        "@googletest//:gtest_main",
+    ],
+)
+
 test_suite(
     name = "unit_tests",
     tests = [
+        ":diagnostic_services_collection_builder_test",
         ":negative_response_code_test",
     ],
     visibility = ["//score/mw/diag:__pkg__"],
