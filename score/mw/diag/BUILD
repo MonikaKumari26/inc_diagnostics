@@ -34,8 +34,6 @@ cc_library(
     visibility = ["//score:__subpackages__"],
     deps = [
         "@score_baselibs//score/result",
-        ":byte_types",
-        "//score/mw/diag/uds:negative_response_code",
     ],
 )
 
