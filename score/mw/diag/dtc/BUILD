@@ -44,18 +44,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "builder",
-    srcs = ["builder.cpp"],
-    hdrs = ["builder.h"],
-    visibility = ["//score:__subpackages__"],
-    deps = [
-        ":debounce",
-        ":dtc",
-        ":identifier",
-    ],
-)
-
 # ---------------------------------------------------------------------------
 # Mock libraries (testonly)
 # ---------------------------------------------------------------------------
@@ -65,11 +53,9 @@ cc_library(
     testonly = True,
     srcs = ["mocks.cpp"],
     hdrs = [
-        "builder_mock.h",
         "dtc_mock.h",
     ],
     deps = [
-        ":builder",
         ":dtc",
         "@googletest//:gtest",
     ],
