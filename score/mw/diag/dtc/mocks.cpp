@@ -11,17 +11,4 @@
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
 
-#include "score/mw/diag/dtc/builder_mock.h"
 #include "score/mw/diag/dtc/dtc_mock.h"
-
-namespace score::mw::diag::dtc::test
-{
-
-// NOLINTNEXTLINE(modernize-use-equals-default) -- body installs ON_CALL default action
-BuilderMock::BuilderMock()
-{
-    ON_CALL(*this, Build())
-        .WillByDefault([]() -> std::unique_ptr<DTC> { return std::make_unique<DTCMock>(); });
-}
-
-}  // namespace score::mw::diag::dtc::test
