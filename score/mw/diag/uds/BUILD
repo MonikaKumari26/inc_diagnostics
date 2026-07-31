@@ -24,6 +24,9 @@ cc_library(
     hdrs = ["negative_response_code.h"],
     srcs = ["negative_response_code.cpp"],
     visibility = ["//score:__subpackages__"],
+    deps = [
+        "@score_baselibs//score/result",
+    ],
 )
 
 cc_library(
@@ -143,6 +146,8 @@ cc_test(
     tags = ["unit"],
     deps = [
         ":negative_response_code",
+        "//score/mw/diag:diag_result",
+        "//score/mw/diag:byte_types",
         "@googletest//:gtest_main",
     ],
 )

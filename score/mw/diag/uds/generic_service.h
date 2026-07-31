@@ -17,7 +17,7 @@
 ///
 /// Provides two levels of abstraction:
 ///   - `GenericService`       — full interface with `MetaData` and cancellation support.
-///   - `SimpleGenericService` — simplified adapter for non-blocking, context-free service handling.
+///   - `SimpleGenericService` — simplified adapter for non-blocking service handling with `MetaData`.
 
 #ifndef SCORE_MW_DIAG_UDS_GENERIC_SERVICE_H
 #define SCORE_MW_DIAG_UDS_GENERIC_SERVICE_H
@@ -63,19 +63,20 @@ class SimpleGenericService : public GenericService
 {
   public:
     /// Handle a raw UDS message in a fast and non-blocking manner.
-    /// @param input  Raw request payload bytes (service identifier + data).
+    /// @param input      Raw request payload bytes (service identifier + data).
+    /// @param meta_data  Context provided by the diagnostic runtime for this request.
     /// @return Result<ByteVector> on success, NegativeResponseCode on failure.
-    [[nodiscard]] virtual Result<ByteVector> HandleMessage(ByteView input) = 0;
+    [[nodiscard]] virtual Result<ByteVector> HandleMessage(ByteView input, const MetaData& meta_data) = 0;
 
     virtual ~SimpleGenericService() noexcept = default;
 
   private:
     std::future<Result<ByteVector>> HandleMessage(ByteView input,
-                                     const MetaData& /*meta_data*/,
+                                     const MetaData& meta_data,
                                      score::cpp::stop_token /*stop_token*/) final
     {
         std::promise<Result<ByteVector>> promise;
-        promise.set_value(HandleMessage(input));
+        promise.set_value(HandleMessage(input, meta_data));
         return promise.get_future();
     }
 };

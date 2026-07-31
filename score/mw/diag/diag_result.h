@@ -26,7 +26,7 @@
 namespace score::mw::diag::uds
 {
 
-/// Result type: either a value T or a UDS NegativeResponseCode.
+/// Result type: either a success value T or a score::result::Error with NegativeResponseCode as the error type.
 template <typename T>
 using Result = score::Result<T>;
 

@@ -12,7 +12,8 @@
  ********************************************************************************/
 
 /// @file read_data_by_identifier_mock.h
-/// @brief GMock implementation of score::mw::diag::uds::ReadDataByIdentifier.
+/// @brief GMock implementation of score::mw::diag::uds::ReadDataByIdentifier
+///        and score::mw::diag::uds::SimpleReadDataByIdentifier.
 
 #ifndef SCORE_MW_DIAG_UDS_READ_DATA_BY_IDENTIFIER_MOCK_H
 #define SCORE_MW_DIAG_UDS_READ_DATA_BY_IDENTIFIER_MOCK_H
@@ -34,11 +35,11 @@ class ReadDataByIdentifierMock : public ReadDataByIdentifier
                 (override));
 };
 
-/// Mock for the context-free score::mw::diag::uds::SimpleReadDataByIdentifier (Service 0x22).
+/// Mock for the simplified score::mw::diag::uds::SimpleReadDataByIdentifier (Service 0x22).
 class SimpleReadDataByIdentifierMock : public SimpleReadDataByIdentifier
 {
   public:
-    MOCK_METHOD(Result<ByteVector>, Read, (), (override));
+    MOCK_METHOD((Result<ByteVector>), Read, (const MetaData& meta_data), (override));
 };
 
 }  // namespace score::mw::diag::uds::test

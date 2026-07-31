@@ -16,7 +16,7 @@
 ///
 /// Provides two levels of abstraction:
 ///   - `RoutineControl`       — full interface with `MetaData` and cancellation support.
-///   - `SimpleRoutineControl` — simplified adapter for non-blocking, context-free routines.
+///   - `SimpleRoutineControl` — simplified adapter for non-blocking routines with `MetaData`.
 
 #ifndef SCORE_MW_DIAG_UDS_ROUTINE_CONTROL_H
 #define SCORE_MW_DIAG_UDS_ROUTINE_CONTROL_H
@@ -90,51 +90,54 @@ class RoutineControl
 /// Simplified adapter for `RoutineControl` (must be non-blocking!)
 ///
 /// Implement the simple variants — the adapter bridges them to the full
-/// `RoutineControl` interface by ignoring `meta_data` and `stop_token`.
+/// `RoutineControl` interface by ignoring the `stop_token`.
 class SimpleRoutineControl : public RoutineControl
 {
   public:
     /// Start the routine in a fast and non-blocking manner.
-    /// @param input  Non-owning view of the raw input bytes accompanying the start request.
+    /// @param input      Non-owning view of the raw input bytes accompanying the start request.
+    /// @param meta_data  Context provided by the diagnostic runtime for this request.
     /// @return Result<ByteVector> wrapping serialized routineStatusRecord bytes on success;
     ///         NegativeResponseCode on failure.
-    [[nodiscard]] virtual Result<ByteVector> Start(ByteView input) = 0;
+    [[nodiscard]] virtual Result<ByteVector> Start(ByteView input, const MetaData& meta_data) = 0;
 
     /// Stop the routine in a fast and non-blocking manner.
-    /// @param input  Non-owning view of the raw input bytes accompanying the stop request.
+    /// @param input      Non-owning view of the raw input bytes accompanying the stop request.
+    /// @param meta_data  Context provided by the diagnostic runtime for this request.
     /// @return Result<ByteVector> wrapping serialized routineStatusRecord bytes on success;
     ///         NegativeResponseCode on failure.
-    [[nodiscard]] virtual Result<ByteVector> Stop(ByteView input) = 0;
+    [[nodiscard]] virtual Result<ByteVector> Stop(ByteView input, const MetaData& meta_data) = 0;
 
     /// Request the routine results in a fast and non-blocking manner.
-    /// @param input  Non-owning view of the raw input bytes accompanying the request.
+    /// @param input      Non-owning view of the raw input bytes accompanying the request.
+    /// @param meta_data  Context provided by the diagnostic runtime for this request.
     /// @return Result<ByteVector> wrapping serialized routineStatusRecord bytes on success;
     ///         NegativeResponseCode on failure.
-    [[nodiscard]] virtual Result<ByteVector> RequestResults(ByteView input) = 0;
+    [[nodiscard]] virtual Result<ByteVector> RequestResults(ByteView input, const MetaData& meta_data) = 0;
 
     virtual ~SimpleRoutineControl() noexcept = default;
 
   private:
-    std::future<Result<ByteVector>> Start(ByteView input, const MetaData& /*meta_data*/, score::cpp::stop_token /*stop_token*/) final
+    std::future<Result<ByteVector>> Start(ByteView input, const MetaData& meta_data, score::cpp::stop_token /*stop_token*/) final
     {
         std::promise<Result<ByteVector>> promise;
-        promise.set_value(Start(input));
+        promise.set_value(Start(input, meta_data));
         return promise.get_future();
     }
 
-    std::future<Result<ByteVector>> Stop(ByteView input, const MetaData& /*meta_data*/, score::cpp::stop_token /*stop_token*/) final
+    std::future<Result<ByteVector>> Stop(ByteView input, const MetaData& meta_data, score::cpp::stop_token /*stop_token*/) final
     {
         std::promise<Result<ByteVector>> promise;
-        promise.set_value(Stop(input));
+        promise.set_value(Stop(input, meta_data));
         return promise.get_future();
     }
 
     std::future<Result<ByteVector>> RequestResults(ByteView input,
-                                      const MetaData& /*meta_data*/,
+                                      const MetaData& meta_data,
                                       score::cpp::stop_token /*stop_token*/) final
     {
         std::promise<Result<ByteVector>> promise;
-        promise.set_value(RequestResults(input));
+        promise.set_value(RequestResults(input, meta_data));
         return promise.get_future();
     }
 };

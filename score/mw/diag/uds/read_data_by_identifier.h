@@ -16,7 +16,7 @@
 ///
 /// Provides two levels of abstraction:
 ///   - `ReadDataByIdentifier`       — full interface with `MetaData` and cancellation support.
-///   - `SimpleReadDataByIdentifier` — simplified adapter for non-blocking, context-free reads.
+///   - `SimpleReadDataByIdentifier` — simplified adapter for non-blocking reads with `MetaData`.
 
 #ifndef SCORE_MW_DIAG_UDS_READ_DATA_BY_IDENTIFIER_H
 #define SCORE_MW_DIAG_UDS_READ_DATA_BY_IDENTIFIER_H
@@ -51,21 +51,23 @@ class ReadDataByIdentifier
 /// Simplified adapter for `ReadDataByIdentifier` (must be non-blocking!)
 ///
 /// Implement the simple `Read()` — the adapter bridges it to the full
-/// `ReadDataByIdentifier` interface by ignoring `meta_data` and `stop_token`.
+/// `ReadDataByIdentifier` interface by ignoring the `stop_token`.
 class SimpleReadDataByIdentifier : public ReadDataByIdentifier
 {
   public:
     /// Read raw bytes for the data identifier in a fast and non-blocking manner.
+    /// @param meta_data Context provided by the diagnostic runtime for this request.
     /// @return Result<ByteVector> on success, NegativeResponseCode on failure.
-    [[nodiscard]] virtual Result<ByteVector> Read() = 0;
+    [[nodiscard]] virtual Result<ByteVector> Read(const MetaData& meta_data) = 0;
 
     virtual ~SimpleReadDataByIdentifier() noexcept = default;
 
   private:
-    std::future<Result<ByteVector>> Read(const MetaData& /*meta_data*/, score::cpp::stop_token /*stop_token*/) final
+    std::future<Result<ByteVector>> Read(const MetaData& meta_data,
+                                        score::cpp::stop_token /*stop_token*/) final
     {
         std::promise<Result<ByteVector>> promise;
-        promise.set_value(Read());
+        promise.set_value(Read(meta_data));
         return promise.get_future();
     }
 };

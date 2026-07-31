@@ -16,7 +16,7 @@
 ///
 /// Provides two levels of abstraction:
 ///   - `WriteDataByIdentifier`       — full interface with `MetaData` and cancellation support.
-///   - `SimpleWriteDataByIdentifier` — simplified adapter for non-blocking, context-free writes.
+///   - `SimpleWriteDataByIdentifier` — simplified adapter for non-blocking writes with `MetaData`.
 
 #ifndef SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_H
 #define SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_H
@@ -53,24 +53,25 @@ class WriteDataByIdentifier
 /// Simplified adapter for `WriteDataByIdentifier` (must be non-blocking!)
 ///
 /// Implement the simple `Write()` — the adapter bridges it to the full
-/// `WriteDataByIdentifier` interface by ignoring `meta_data` and `stop_token`.
+/// `WriteDataByIdentifier` interface by ignoring the `stop_token`.
 class SimpleWriteDataByIdentifier : public WriteDataByIdentifier
 {
   public:
     /// Write raw bytes for the data identifier in a fast and non-blocking manner.
-    /// @param input  Non-owning view of the raw bytes to write.
+    /// @param input      Non-owning view of the raw bytes to write.
+    /// @param meta_data  Context provided by the diagnostic runtime for this request.
     /// @return Result<void> on success, NegativeResponseCode on failure.
-    [[nodiscard]] virtual Result<void> Write(ByteView input) = 0;
+    [[nodiscard]] virtual Result<void> Write(ByteView input, const MetaData& meta_data) = 0;
 
     virtual ~SimpleWriteDataByIdentifier() noexcept = default;
 
   private:
     std::future<Result<void>> Write(ByteView input,
-                                   const MetaData& /*meta_data*/,
+                                   const MetaData& meta_data,
                                    score::cpp::stop_token /*stop_token*/) final
     {
         std::promise<Result<void>> promise;
-        promise.set_value(Write(input));
+        promise.set_value(Write(input, meta_data));
         return promise.get_future();
     }
 };

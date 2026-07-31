@@ -12,7 +12,8 @@
  ********************************************************************************/
 
 /// @file generic_service_mock.h
-/// @brief GMock implementation of score::mw::diag::uds::GenericService.
+/// @brief GMock implementation of score::mw::diag::uds::GenericService
+///        and score::mw::diag::uds::SimpleGenericService.
 
 #ifndef SCORE_MW_DIAG_UDS_GENERIC_SERVICE_MOCK_H
 #define SCORE_MW_DIAG_UDS_GENERIC_SERVICE_MOCK_H
@@ -28,17 +29,20 @@ namespace score::mw::diag::uds::test
 class GenericServiceMock : public GenericService
 {
   public:
-    MOCK_METHOD(std::future<Result<ByteVector>>,
+    MOCK_METHOD((std::future<Result<ByteVector>>),
                 HandleMessage,
                 (ByteView input, const MetaData& meta_data, score::cpp::stop_token stop_token),
                 (override));
 };
 
-/// Mock for the context-free score::mw::diag::uds::SimpleGenericService.
+/// Mock for the simplified score::mw::diag::uds::SimpleGenericService.
 class SimpleGenericServiceMock : public SimpleGenericService
 {
   public:
-    MOCK_METHOD(Result<ByteVector>, HandleMessage, (ByteView input), (override));
+    MOCK_METHOD((Result<ByteVector>),
+                HandleMessage,
+                (ByteView input, const MetaData& meta_data),
+                (override));
 };
 
 }  // namespace score::mw::diag::uds::test

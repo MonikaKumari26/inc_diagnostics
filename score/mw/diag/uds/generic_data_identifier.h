@@ -17,7 +17,7 @@
 ///
 /// Provides two levels of abstraction:
 ///   - `GenericDataIdentifier`       — full interface combining RDBI and WDBI with context support.
-///   - `SimpleGenericDataIdentifier` — simplified adapter for non-blocking, context-free read/write DIDs.
+///   - `SimpleGenericDataIdentifier` — simplified adapter for non-blocking read/write DIDs with MetaData.
 
 #ifndef SCORE_MW_DIAG_UDS_GENERIC_DATA_IDENTIFIER_H
 #define SCORE_MW_DIAG_UDS_GENERIC_DATA_IDENTIFIER_H
@@ -44,8 +44,8 @@ class GenericDataIdentifier : public ReadDataByIdentifier, public WriteDataByIde
 
 /// Simplified adapter for `GenericDataIdentifier` (must be non-blocking!)
 ///
-/// Use this when a DID must handle both read and write requests in a fast, context-free manner.
-/// Implementors override the parameterless `Read()` and single-parameter `Write()`.
+/// Use this when a DID must handle both read and write requests in a fast manner.
+/// Implementors override `Read(const MetaData& meta_data)` and `Write(ByteView input, const MetaData& meta_data)`.
 // NOLINTBEGIN(fuchsia-multiple-inheritance): SimpleGenericDataIdentifier inherits from
 // GenericDataIdentifier and the simple variants to properly route interface adapters.
 class SimpleGenericDataIdentifier : public SimpleReadDataByIdentifier, public SimpleWriteDataByIdentifier

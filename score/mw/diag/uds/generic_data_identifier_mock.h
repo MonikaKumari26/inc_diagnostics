@@ -12,7 +12,8 @@
  ********************************************************************************/
 
 /// @file generic_data_identifier_mock.h
-/// @brief GMock implementation of score::mw::diag::uds::GenericDataIdentifier.
+/// @brief GMock implementation of score::mw::diag::uds::GenericDataIdentifier
+///        and score::mw::diag::uds::SimpleGenericDataIdentifier.
 
 #ifndef SCORE_MW_DIAG_UDS_GENERIC_DATA_IDENTIFIER_MOCK_H
 #define SCORE_MW_DIAG_UDS_GENERIC_DATA_IDENTIFIER_MOCK_H
@@ -39,12 +40,19 @@ class GenericDataIdentifierMock : public GenericDataIdentifier
                 (override));
 };
 
-/// Mock for the context-free score::mw::diag::uds::SimpleGenericDataIdentifier (Services 0x22 + 0x2E combined).
+/// Mock for the simplified score::mw::diag::uds::SimpleGenericDataIdentifier (Services 0x22 + 0x2E combined).
 class SimpleGenericDataIdentifierMock : public SimpleGenericDataIdentifier
 {
   public:
-    MOCK_METHOD(Result<ByteVector>, Read, (), (override));
-    MOCK_METHOD(Result<void>, Write, (ByteView input), (override));
+    MOCK_METHOD((Result<ByteVector>),
+                Read,
+                (const MetaData& meta_data),
+                (override));
+
+    MOCK_METHOD((Result<void>),
+                Write,
+                (ByteView input, const MetaData& meta_data),
+                (override));
 };
 
 }  // namespace score::mw::diag::uds::test

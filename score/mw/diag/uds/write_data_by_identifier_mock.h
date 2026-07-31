@@ -12,7 +12,8 @@
  ********************************************************************************/
 
 /// @file write_data_by_identifier_mock.h
-/// @brief GMock implementation of score::mw::diag::uds::WriteDataByIdentifier.
+/// @brief GMock implementation of score::mw::diag::uds::WriteDataByIdentifier
+///        and score::mw::diag::uds::SimpleWriteDataByIdentifier.
 
 #ifndef SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_MOCK_H
 #define SCORE_MW_DIAG_UDS_WRITE_DATA_BY_IDENTIFIER_MOCK_H
@@ -28,17 +29,20 @@ namespace score::mw::diag::uds::test
 class WriteDataByIdentifierMock : public WriteDataByIdentifier
 {
   public:
-    MOCK_METHOD(std::future<Result<void>>,
+    MOCK_METHOD((std::future<Result<void>>),
                 Write,
                 (ByteView input, const MetaData& meta_data, score::cpp::stop_token stop_token),
                 (override));
 };
 
-/// Mock for the context-free score::mw::diag::uds::SimpleWriteDataByIdentifier (Service 0x2E).
+/// Mock for the simplified score::mw::diag::uds::SimpleWriteDataByIdentifier (Service 0x2E).
 class SimpleWriteDataByIdentifierMock : public SimpleWriteDataByIdentifier
 {
   public:
-    MOCK_METHOD(Result<void>, Write, (ByteView input), (override));
+    MOCK_METHOD((Result<void>),
+                Write,
+                (ByteView input, const MetaData& meta_data),
+                (override));
 };
 
 }  // namespace score::mw::diag::uds::test
