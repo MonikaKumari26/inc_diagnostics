@@ -11,7 +11,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 # ---------------------------------------------------------------------------
 # Libraries
@@ -65,8 +65,6 @@ cc_library(
 # Tests
 # ---------------------------------------------------------------------------
 
-load("@rules_cc//cc:defs.bzl", "cc_test")
-
 cc_test(
     name = "debounce_test",
     timeout = "short",
@@ -85,8 +83,8 @@ cc_test(
     tags = ["unit"],
     deps = [
         ":identifier",
-        "@score_baselibs//score/language/futurecpp:futurecpp_test_support",
         "@googletest//:gtest_main",
+        "@score_baselibs//score/language/futurecpp:futurecpp_test_support",
     ],
 )
 
