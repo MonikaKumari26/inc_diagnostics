@@ -44,8 +44,8 @@ class WriteDataByIdentifier
     /// @param stop_token  Token that becomes stopped if the runtime cancels the request.
     /// @return std::future<Result<void>> on success, NegativeResponseCode on failure.
     [[nodiscard]] virtual std::future<Result<void>> Write(ByteView input,
-                                                         const MetaData& meta_data,
-                                                         score::cpp::stop_token stop_token) = 0;
+                                                          const MetaData& meta_data,
+                                                          score::cpp::stop_token stop_token) = 0;
 
     virtual ~WriteDataByIdentifier() noexcept = default;
 };
@@ -67,8 +67,8 @@ class SimpleWriteDataByIdentifier : public WriteDataByIdentifier
 
   private:
     std::future<Result<void>> Write(ByteView input,
-                                   const MetaData& meta_data,
-                                   score::cpp::stop_token /*stop_token*/) final
+                                    const MetaData& meta_data,
+                                    score::cpp::stop_token /*stop_token*/) final
     {
         std::promise<Result<void>> promise;
         promise.set_value(Write(input, meta_data));

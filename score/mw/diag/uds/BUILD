@@ -21,8 +21,8 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 # it into :uds would create a circular dependency (uds → diag_result → uds).
 cc_library(
     name = "negative_response_code",
-    hdrs = ["negative_response_code.h"],
     srcs = ["negative_response_code.cpp"],
+    hdrs = ["negative_response_code.h"],
     visibility = ["//score:__subpackages__"],
     deps = [
         "@score_baselibs//score/result",
@@ -31,68 +31,68 @@ cc_library(
 
 cc_library(
     name = "meta_data",
-    hdrs = ["meta_data.h"],
     srcs = ["meta_data.cpp"],
+    hdrs = ["meta_data.h"],
     visibility = ["//score:__subpackages__"],
 )
 
 cc_library(
     name = "generic_service",
-    hdrs = ["generic_service.h"],
     srcs = ["generic_service.cpp"],
+    hdrs = ["generic_service.h"],
     visibility = ["//score:__subpackages__"],
     deps = [
+        ":meta_data",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
-        ":meta_data",
     ],
 )
 
 cc_library(
     name = "read_data_by_identifier",
-    hdrs = ["read_data_by_identifier.h"],
     srcs = ["read_data_by_identifier.cpp"],
+    hdrs = ["read_data_by_identifier.h"],
     visibility = ["//score:__subpackages__"],
     deps = [
+        ":meta_data",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
-        ":meta_data",
     ],
 )
 
 cc_library(
     name = "write_data_by_identifier",
-    hdrs = ["write_data_by_identifier.h"],
     srcs = ["write_data_by_identifier.cpp"],
+    hdrs = ["write_data_by_identifier.h"],
     visibility = ["//score:__subpackages__"],
     deps = [
+        ":meta_data",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
-        ":meta_data",
     ],
 )
 
 cc_library(
     name = "generic_data_identifier",
-    hdrs = ["generic_data_identifier.h"],
     srcs = ["generic_data_identifier.cpp"],
+    hdrs = ["generic_data_identifier.h"],
     visibility = ["//score:__subpackages__"],
     deps = [
+        ":meta_data",
         ":read_data_by_identifier",
         ":write_data_by_identifier",
-        ":meta_data",
     ],
 )
 
 cc_library(
     name = "routine_control",
-    hdrs = ["routine_control.h"],
     srcs = ["routine_control.cpp"],
+    hdrs = ["routine_control.h"],
     visibility = ["//score:__subpackages__"],
     deps = [
+        ":meta_data",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
-        ":meta_data",
     ],
 )
 
@@ -117,6 +117,7 @@ cc_library(
 cc_library(
     name = "mocks",
     testonly = True,
+    srcs = ["mocks.cpp"],
     hdrs = [
         "generic_data_identifier_mock.h",
         "generic_service_mock.h",
@@ -124,7 +125,6 @@ cc_library(
         "routine_control_mock.h",
         "write_data_by_identifier_mock.h",
     ],
-    srcs = ["mocks.cpp"],
     visibility = ["//score:__subpackages__"],
     deps = [
         ":generic_data_identifier",
@@ -146,8 +146,8 @@ cc_test(
     tags = ["unit"],
     deps = [
         ":negative_response_code",
-        "//score/mw/diag:diag_result",
         "//score/mw/diag:byte_types",
+        "//score/mw/diag:diag_result",
         "@googletest//:gtest_main",
     ],
 )

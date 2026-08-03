@@ -39,10 +39,7 @@ class GenericServiceMock : public GenericService
 class SimpleGenericServiceMock : public SimpleGenericService
 {
   public:
-    MOCK_METHOD((Result<ByteVector>),
-                HandleMessage,
-                (ByteView input, const MetaData& meta_data),
-                (override));
+    MOCK_METHOD((Result<ByteVector>), HandleMessage, (ByteView input, const MetaData& meta_data), (override));
 };
 
 }  // namespace score::mw::diag::uds::test

@@ -27,7 +27,7 @@ namespace score::mw::diag::uds
 {
 
 /// See ISO 14229-1:2020, Table A.1
-//enum class NegativeResponseCode : std::uint8_t
+// enum class NegativeResponseCode : std::uint8_t
 enum class NegativeResponseCode : score::result::ErrorCode
 {
     GeneralReject = 0x10,
@@ -93,7 +93,7 @@ enum class NegativeResponseCode : score::result::ErrorCode
 };
 
 /// Helper function to create a score::result::Error
-score::result::Error MakeError( const NegativeResponseCode code, const std::string_view user_message = "") noexcept;
+score::result::Error MakeError(const NegativeResponseCode code, const std::string_view user_message = "") noexcept;
 
 [[nodiscard]] std::optional<NegativeResponseCode> ToNegativeResponseCode(const score::result::ErrorCode& code) noexcept;
 
@@ -135,7 +135,8 @@ class RangedNRC
     }
 
     /// Implicit conversion to NegativeResponseCode.
-    /// Safe because [kRangeMin, kRangeMax] is verified at compile time (see below) to lie within `NegativeResponseCode`'s valid value range.
+    /// Safe because [kRangeMin, kRangeMax] is verified at compile time (see below) to lie within
+    /// `NegativeResponseCode`'s valid value range.
     // NOLINTNEXTLINE(google-explicit-constructor) implicit conversion to `NegativeResponseCode` is always safe
     constexpr operator NegativeResponseCode() const noexcept
     {

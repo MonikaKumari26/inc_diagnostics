@@ -63,8 +63,7 @@ class SimpleReadDataByIdentifier : public ReadDataByIdentifier
     virtual ~SimpleReadDataByIdentifier() noexcept = default;
 
   private:
-    std::future<Result<ByteVector>> Read(const MetaData& meta_data,
-                                        score::cpp::stop_token /*stop_token*/) final
+    std::future<Result<ByteVector>> Read(const MetaData& meta_data, score::cpp::stop_token /*stop_token*/) final
     {
         std::promise<Result<ByteVector>> promise;
         promise.set_value(Read(meta_data));

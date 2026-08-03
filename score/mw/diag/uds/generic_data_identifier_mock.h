@@ -44,15 +44,9 @@ class GenericDataIdentifierMock : public GenericDataIdentifier
 class SimpleGenericDataIdentifierMock : public SimpleGenericDataIdentifier
 {
   public:
-    MOCK_METHOD((Result<ByteVector>),
-                Read,
-                (const MetaData& meta_data),
-                (override));
+    MOCK_METHOD((Result<ByteVector>), Read, (const MetaData& meta_data), (override));
 
-    MOCK_METHOD((Result<void>),
-                Write,
-                (ByteView input, const MetaData& meta_data),
-                (override));
+    MOCK_METHOD((Result<void>), Write, (ByteView input, const MetaData& meta_data), (override));
 };
 
 }  // namespace score::mw::diag::uds::test

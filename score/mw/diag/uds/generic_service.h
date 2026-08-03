@@ -72,8 +72,8 @@ class SimpleGenericService : public GenericService
 
   private:
     std::future<Result<ByteVector>> HandleMessage(ByteView input,
-                                     const MetaData& meta_data,
-                                     score::cpp::stop_token /*stop_token*/) final
+                                                  const MetaData& meta_data,
+                                                  score::cpp::stop_token /*stop_token*/) final
     {
         std::promise<Result<ByteVector>> promise;
         promise.set_value(HandleMessage(input, meta_data));

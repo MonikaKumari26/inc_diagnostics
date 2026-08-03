@@ -15,8 +15,8 @@
 /// @brief Unit tests for score/mw/diag/uds/negative_response_code.h & .cpp
 
 #include "score/mw/diag/uds/negative_response_code.h"
-#include "score/mw/diag/diag_result.h"
 #include "score/mw/diag/byte_types.h"
+#include "score/mw/diag/diag_result.h"
 
 #include <gtest/gtest.h>
 
@@ -25,14 +25,10 @@ namespace score::mw::diag::uds
 
 // ── NegativeResponseCode ──────────────────────────────────────────────────
 
-TEST(UdsResponseCodeTest, NrcGeneralRejectValue)
-{
-    EXPECT_EQ(static_cast<std::uint8_t>(NegativeResponseCode::GeneralReject), 0x10U);
-}
-
-TEST(UdsResponseCodeTest, NrcFullIso14229Coverage)
+TEST(UdsResponseCodeTest, NrcIso14229ValueMapping)
 {
     // Spot-check key values from all sections of ISO 14229-1:2020 Table A.1
+    EXPECT_EQ(static_cast<std::uint8_t>(NegativeResponseCode::GeneralReject), 0x10U);
     EXPECT_EQ(static_cast<std::uint8_t>(NegativeResponseCode::ServiceNotSupported), 0x11U);
     EXPECT_EQ(static_cast<std::uint8_t>(NegativeResponseCode::SubFunctionNotSupported), 0x12U);
     EXPECT_EQ(static_cast<std::uint8_t>(NegativeResponseCode::RequestOutOfRange), 0x31U);
@@ -92,18 +88,36 @@ TEST(UdsErrorTest, ErrorMessageForUnknownCodeReturnsUndefined)
     EXPECT_EQ(err.Message(), "Undefined ErrorCode!");
 }
 
-// ── VehicleManufacturerSpecificCNC & RangedNRC ─────────────────────────────
-
-TEST(UdsResponseCodeTest, VehicleManufacturerSpecificCNCValue)
+TEST(UdsErrorTest, MakeErrorWithDefaultEmptyUserMessageHasEmptyUserMessage)
 {
-    const auto cnc = VehicleManufacturerSpecificCNC::FromValue<VehicleManufacturerSpecificCNC::kRangeMin>();
-    EXPECT_EQ(cnc.Value(), VehicleManufacturerSpecificCNC::kRangeMin);
+    const auto err = MakeError(NegativeResponseCode::GeneralReject);
+    EXPECT_EQ(err.UserMessage(), "");
 }
 
-TEST(UdsResponseCodeTest, VehicleManufacturerSpecificCNCMaxValue)
+// ── ToNegativeResponseCode — reserved/gap codes ─────────────────────────────
+
+TEST(UdsResponseCodeTest, ToNegativeResponseCodeReservedGapCodesReturnNullopt)
 {
-    const auto cnc = VehicleManufacturerSpecificCNC::FromValue<VehicleManufacturerSpecificCNC::kRangeMax>();
-    EXPECT_EQ(cnc.Value(), VehicleManufacturerSpecificCNC::kRangeMax);
+    // Gaps in the ISO 14229-1:2020 Table A.1 (unassigned values between valid NRCs)
+    EXPECT_FALSE(ToNegativeResponseCode(0x20).has_value());  // gap between 0x14 and 0x21
+    EXPECT_FALSE(ToNegativeResponseCode(0x23).has_value());  // gap: 0x22 valid, 0x24 valid
+    EXPECT_FALSE(ToNegativeResponseCode(0x30).has_value());  // gap between 0x26 and 0x31
+    EXPECT_FALSE(ToNegativeResponseCode(0x32).has_value());  // gap between 0x31 and 0x33
+    EXPECT_FALSE(ToNegativeResponseCode(0x74).has_value());  // gap between 0x73 and 0x78
+    EXPECT_FALSE(ToNegativeResponseCode(0x80).has_value());  // gap between 0x7F and 0x81
+    EXPECT_FALSE(ToNegativeResponseCode(0x8E).has_value());  // gap between 0x8D and 0x8F
+    EXPECT_FALSE(ToNegativeResponseCode(0x95).has_value());  // gap between 0x94 and 0xFF
+}
+
+// ── VehicleManufacturerSpecificCNC & RangedNRC ─────────────────────────────
+
+TEST(UdsResponseCodeTest, VehicleManufacturerSpecificCNCCompileTimeMinMax)
+{
+    const auto cnc_min = VehicleManufacturerSpecificCNC::FromValue<VehicleManufacturerSpecificCNC::kRangeMin>();
+    EXPECT_EQ(cnc_min.Value(), VehicleManufacturerSpecificCNC::kRangeMin);
+
+    const auto cnc_max = VehicleManufacturerSpecificCNC::FromValue<VehicleManufacturerSpecificCNC::kRangeMax>();
+    EXPECT_EQ(cnc_max.Value(), VehicleManufacturerSpecificCNC::kRangeMax);
 }
 
 TEST(UdsResponseCodeTest, VehicleManufacturerSpecificCNCValueAccessor)

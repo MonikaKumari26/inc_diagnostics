@@ -39,10 +39,7 @@ class WriteDataByIdentifierMock : public WriteDataByIdentifier
 class SimpleWriteDataByIdentifierMock : public SimpleWriteDataByIdentifier
 {
   public:
-    MOCK_METHOD((Result<void>),
-                Write,
-                (ByteView input, const MetaData& meta_data),
-                (override));
+    MOCK_METHOD((Result<void>), Write, (ByteView input, const MetaData& meta_data), (override));
 };
 
 }  // namespace score::mw::diag::uds::test

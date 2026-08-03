@@ -28,8 +28,8 @@
 #include <score/stop_token.hpp>
 
 #include <cstdint>
-#include <optional>
 #include <future>
+#include <optional>
 
 namespace score::mw::diag::uds
 {
@@ -118,14 +118,18 @@ class SimpleRoutineControl : public RoutineControl
     virtual ~SimpleRoutineControl() noexcept = default;
 
   private:
-    std::future<Result<ByteVector>> Start(ByteView input, const MetaData& meta_data, score::cpp::stop_token /*stop_token*/) final
+    std::future<Result<ByteVector>> Start(ByteView input,
+                                          const MetaData& meta_data,
+                                          score::cpp::stop_token /*stop_token*/) final
     {
         std::promise<Result<ByteVector>> promise;
         promise.set_value(Start(input, meta_data));
         return promise.get_future();
     }
 
-    std::future<Result<ByteVector>> Stop(ByteView input, const MetaData& meta_data, score::cpp::stop_token /*stop_token*/) final
+    std::future<Result<ByteVector>> Stop(ByteView input,
+                                         const MetaData& meta_data,
+                                         score::cpp::stop_token /*stop_token*/) final
     {
         std::promise<Result<ByteVector>> promise;
         promise.set_value(Stop(input, meta_data));
@@ -133,8 +137,8 @@ class SimpleRoutineControl : public RoutineControl
     }
 
     std::future<Result<ByteVector>> RequestResults(ByteView input,
-                                      const MetaData& meta_data,
-                                      score::cpp::stop_token /*stop_token*/) final
+                                                   const MetaData& meta_data,
+                                                   score::cpp::stop_token /*stop_token*/) final
     {
         std::promise<Result<ByteVector>> promise;
         promise.set_value(RequestResults(input, meta_data));

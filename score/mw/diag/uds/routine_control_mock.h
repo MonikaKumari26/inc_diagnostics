@@ -44,30 +44,18 @@ class RoutineControlMock : public RoutineControl
                 (ByteView input, const MetaData& meta_data, score::cpp::stop_token stop_token),
                 (override));
 
-    MOCK_METHOD((std::optional<std::uint8_t>),
-                CompletionPercentage,
-                (),
-                (const, noexcept, override));
+    MOCK_METHOD((std::optional<std::uint8_t>), CompletionPercentage, (), (const, noexcept, override));
 };
 
 /// Mock for the simplified score::mw::diag::uds::SimpleRoutineControl (Service 0x31).
 class SimpleRoutineControlMock : public SimpleRoutineControl
 {
   public:
-    MOCK_METHOD((Result<ByteVector>),
-                Start,
-                (ByteView input, const MetaData& meta_data),
-                (override));
+    MOCK_METHOD((Result<ByteVector>), Start, (ByteView input, const MetaData& meta_data), (override));
 
-    MOCK_METHOD((Result<ByteVector>),
-                Stop,
-                (ByteView input, const MetaData& meta_data),
-                (override));
+    MOCK_METHOD((Result<ByteVector>), Stop, (ByteView input, const MetaData& meta_data), (override));
 
-    MOCK_METHOD((Result<ByteVector>),
-                RequestResults,
-                (ByteView input, const MetaData& meta_data),
-                (override));
+    MOCK_METHOD((Result<ByteVector>), RequestResults, (ByteView input, const MetaData& meta_data), (override));
 };
 
 }  // namespace score::mw::diag::uds::test
