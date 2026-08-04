@@ -141,6 +141,19 @@ cc_library(
 # ---------------------------------------------------------------------------
 
 cc_test(
+    name = "meta_data_test",
+    srcs = ["meta_data_test.cpp"],
+    tags = ["unit"],
+    deps = [
+        ":meta_data",
+        ":negative_response_code",
+        "//score/mw/diag:byte_types",
+        "//score/mw/diag:diag_result",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "negative_response_code_test",
     srcs = ["negative_response_code_test.cpp"],
     tags = ["unit"],
@@ -155,6 +168,7 @@ cc_test(
 test_suite(
     name = "unit_tests",
     tests = [
+        ":meta_data_test",
         ":negative_response_code_test",
     ],
     visibility = ["//score/mw/diag:__pkg__"],
