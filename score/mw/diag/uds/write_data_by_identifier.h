@@ -23,11 +23,11 @@
 
 #include "score/mw/diag/byte_types.h"
 #include "score/mw/diag/diag_result.h"
+#include "score/mw/diag/future.h"
 #include "score/mw/diag/uds/meta_data.h"
+#include "score/mw/diag/uds/negative_response_code.h"
 
 #include <score/stop_token.hpp>
-
-#include <future>
 
 namespace score::mw::diag::uds
 {
@@ -42,10 +42,10 @@ class WriteDataByIdentifier
     /// @param input       Non-owning view of the raw bytes to write.
     /// @param meta_data   Context provided by the diagnostic runtime for this request.
     /// @param stop_token  Token that becomes stopped if the runtime cancels the request.
-    /// @return std::future<Result<void>> on success, NegativeResponseCode on failure.
-    [[nodiscard]] virtual std::future<Result<void>> Write(ByteView input,
-                                                          const MetaData& meta_data,
-                                                          score::cpp::stop_token stop_token) = 0;
+    /// @return Future<Result<void>> on success, NegativeResponseCode on failure.
+    [[nodiscard]] virtual Future<Result<void>> Write(ByteView input,
+                                                     const MetaData& meta_data,
+                                                     score::cpp::stop_token stop_token) = 0;
 
     virtual ~WriteDataByIdentifier() noexcept = default;
 };
@@ -66,13 +66,20 @@ class SimpleWriteDataByIdentifier : public WriteDataByIdentifier
     virtual ~SimpleWriteDataByIdentifier() noexcept = default;
 
   private:
-    std::future<Result<void>> Write(ByteView input,
-                                    const MetaData& meta_data,
-                                    score::cpp::stop_token /*stop_token*/) final
+    Future<Result<void>> Write(ByteView input, const MetaData& meta_data, score::cpp::stop_token /*stop_token*/) final
     {
-        std::promise<Result<void>> promise;
-        promise.set_value(Write(input, meta_data));
-        return promise.get_future();
+        Promise<Result<void>> promise;
+        auto future = promise.GetInterruptibleFuture();
+        const auto set_value_result = promise.SetValue(Write(input, meta_data));
+        if (!set_value_result.has_value())
+        {
+            score::cpp::ignore = promise.SetValue(score::MakeUnexpected(NegativeResponseCode::GeneralReject));
+        }
+        if (future.has_value())
+        {
+            return std::move(future.value());
+        }
+        return {};
     }
 };
 

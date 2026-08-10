@@ -29,7 +29,7 @@ namespace score::mw::diag::uds::test
 class ReadDataByIdentifierMock : public ReadDataByIdentifier
 {
   public:
-    MOCK_METHOD((std::future<Result<ByteVector>>),
+    MOCK_METHOD((Future<Result<ByteVector>>),
                 Read,
                 (const MetaData& meta_data, score::cpp::stop_token stop_token),
                 (override));

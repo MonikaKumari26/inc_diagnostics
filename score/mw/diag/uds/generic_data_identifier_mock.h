@@ -29,12 +29,12 @@ namespace score::mw::diag::uds::test
 class GenericDataIdentifierMock : public GenericDataIdentifier
 {
   public:
-    MOCK_METHOD((std::future<Result<ByteVector>>),
+    MOCK_METHOD((Future<Result<ByteVector>>),
                 Read,
                 (const MetaData& meta_data, score::cpp::stop_token stop_token),
                 (override));
 
-    MOCK_METHOD((std::future<Result<void>>),
+    MOCK_METHOD((Future<Result<void>>),
                 Write,
                 (ByteView input, const MetaData& meta_data, score::cpp::stop_token stop_token),
                 (override));

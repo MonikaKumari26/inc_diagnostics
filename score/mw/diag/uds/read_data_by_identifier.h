@@ -23,11 +23,11 @@
 
 #include "score/mw/diag/byte_types.h"
 #include "score/mw/diag/diag_result.h"
+#include "score/mw/diag/future.h"
 #include "score/mw/diag/uds/meta_data.h"
+#include "score/mw/diag/uds/negative_response_code.h"
 
 #include <score/stop_token.hpp>
-
-#include <future>
 
 namespace score::mw::diag::uds
 {
@@ -41,9 +41,9 @@ class ReadDataByIdentifier
   public:
     /// @param meta_data   Context provided by the diagnostic runtime for this request.
     /// @param stop_token  Token that becomes stopped if the runtime cancels the request.
-    /// @return std::future<Result<ByteVector>> on success, NegativeResponseCode on failure.
-    [[nodiscard]] virtual std::future<Result<ByteVector>> Read(const MetaData& meta_data,
-                                                               score::cpp::stop_token stop_token) = 0;
+    /// @return Future<Result<ByteVector>> on success, NegativeResponseCode on failure.
+    [[nodiscard]] virtual Future<Result<ByteVector>> Read(const MetaData& meta_data,
+                                                          score::cpp::stop_token stop_token) = 0;
 
     virtual ~ReadDataByIdentifier() noexcept = default;
 };
@@ -63,11 +63,20 @@ class SimpleReadDataByIdentifier : public ReadDataByIdentifier
     virtual ~SimpleReadDataByIdentifier() noexcept = default;
 
   private:
-    std::future<Result<ByteVector>> Read(const MetaData& meta_data, score::cpp::stop_token /*stop_token*/) final
+    Future<Result<ByteVector>> Read(const MetaData& meta_data, score::cpp::stop_token /*stop_token*/) final
     {
-        std::promise<Result<ByteVector>> promise;
-        promise.set_value(Read(meta_data));
-        return promise.get_future();
+        Promise<Result<ByteVector>> promise;
+        auto future = promise.GetInterruptibleFuture();
+        const auto set_value_result = promise.SetValue(Read(meta_data));
+        if (!set_value_result.has_value())
+        {
+            score::cpp::ignore = promise.SetValue(score::MakeUnexpected(NegativeResponseCode::GeneralReject));
+        }
+        if (future.has_value())
+        {
+            return std::move(future.value());
+        }
+        return {};
     }
 };
 

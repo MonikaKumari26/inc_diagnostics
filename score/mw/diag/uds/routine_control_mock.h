@@ -29,17 +29,17 @@ namespace score::mw::diag::uds::test
 class RoutineControlMock : public RoutineControl
 {
   public:
-    MOCK_METHOD((std::future<Result<ByteVector>>),
+    MOCK_METHOD((Future<Result<ByteVector>>),
                 Start,
                 (ByteView input, const MetaData& meta_data, score::cpp::stop_token stop_token),
                 (override));
 
-    MOCK_METHOD((std::future<Result<ByteVector>>),
+    MOCK_METHOD((Future<Result<ByteVector>>),
                 Stop,
                 (ByteView input, const MetaData& meta_data, score::cpp::stop_token stop_token),
                 (override));
 
-    MOCK_METHOD((std::future<Result<ByteVector>>),
+    MOCK_METHOD((Future<Result<ByteVector>>),
                 RequestResults,
                 (ByteView input, const MetaData& meta_data, score::cpp::stop_token stop_token),
                 (override));

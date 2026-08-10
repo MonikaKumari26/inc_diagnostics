@@ -43,8 +43,10 @@ cc_library(
     visibility = ["//score:__subpackages__"],
     deps = [
         ":meta_data",
+        ":negative_response_code",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
+        "//score/mw/diag:future",
     ],
 )
 
@@ -55,8 +57,10 @@ cc_library(
     visibility = ["//score:__subpackages__"],
     deps = [
         ":meta_data",
+        ":negative_response_code",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
+        "//score/mw/diag:future",
     ],
 )
 
@@ -67,8 +71,10 @@ cc_library(
     visibility = ["//score:__subpackages__"],
     deps = [
         ":meta_data",
+        ":negative_response_code",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
+        "//score/mw/diag:future",
     ],
 )
 
@@ -91,8 +97,10 @@ cc_library(
     visibility = ["//score:__subpackages__"],
     deps = [
         ":meta_data",
+        ":negative_response_code",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
+        "//score/mw/diag:future",
     ],
 )
 

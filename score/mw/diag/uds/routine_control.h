@@ -23,12 +23,13 @@
 
 #include "score/mw/diag/byte_types.h"
 #include "score/mw/diag/diag_result.h"
+#include "score/mw/diag/future.h"
 #include "score/mw/diag/uds/meta_data.h"
+#include "score/mw/diag/uds/negative_response_code.h"
 
 #include <score/stop_token.hpp>
 
 #include <cstdint>
-#include <future>
 #include <optional>
 
 namespace score::mw::diag::uds
@@ -47,31 +48,31 @@ class RoutineControl
     /// @param input       Non-owning view of the raw input bytes accompanying the start request.
     /// @param meta_data   Context provided by the diagnostic runtime for this request.
     /// @param stop_token  Token that becomes stopped if the runtime cancels the request.
-    /// @return std::future<Result<ByteVector>> wrapping serialized routineStatusRecord bytes on success
+    /// @return Future<Result<ByteVector>> wrapping serialized routineStatusRecord bytes on success
     ///         (empty if the routine produces no start reply data); NegativeResponseCode on failure.
-    [[nodiscard]] virtual std::future<Result<ByteVector>> Start(ByteView input,
-                                                                const MetaData& meta_data,
-                                                                score::cpp::stop_token stop_token) = 0;
+    [[nodiscard]] virtual Future<Result<ByteVector>> Start(ByteView input,
+                                                           const MetaData& meta_data,
+                                                           score::cpp::stop_token stop_token) = 0;
 
     /// Stop the routine (sub-function 0x02).
     /// @param input       Non-owning view of the raw input bytes accompanying the stop request.
     /// @param meta_data   Context provided by the diagnostic runtime for this request.
     /// @param stop_token  Token that becomes stopped if the runtime cancels the request.
-    /// @return std::future<Result<ByteVector>> wrapping serialized routineStatusRecord bytes on success
+    /// @return Future<Result<ByteVector>> wrapping serialized routineStatusRecord bytes on success
     ///         (empty if the routine produces no stop reply data); NegativeResponseCode on failure.
-    [[nodiscard]] virtual std::future<Result<ByteVector>> Stop(ByteView input,
-                                                               const MetaData& meta_data,
-                                                               score::cpp::stop_token stop_token) = 0;
+    [[nodiscard]] virtual Future<Result<ByteVector>> Stop(ByteView input,
+                                                          const MetaData& meta_data,
+                                                          score::cpp::stop_token stop_token) = 0;
 
     /// Request the routine results (sub-function 0x03).
     /// @param input       Non-owning view of the raw input bytes accompanying the request.
     /// @param meta_data   Context provided by the diagnostic runtime for this request.
     /// @param stop_token  Token that becomes stopped if the runtime cancels the request.
-    /// @return std::future<Result<ByteVector>> wrapping serialized routineStatusRecord bytes on success
+    /// @return Future<Result<ByteVector>> wrapping serialized routineStatusRecord bytes on success
     ///         (empty if no result data); NegativeResponseCode on failure.
-    [[nodiscard]] virtual std::future<Result<ByteVector>> RequestResults(ByteView input,
-                                                                         const MetaData& meta_data,
-                                                                         score::cpp::stop_token stop_token) = 0;
+    [[nodiscard]] virtual Future<Result<ByteVector>> RequestResults(ByteView input,
+                                                                    const MetaData& meta_data,
+                                                                    score::cpp::stop_token stop_token) = 0;
 
     /// Optionally provide the current routine completion percentage.
     /// @return A value in [0, 100] representing the completion percentage,
@@ -118,31 +119,58 @@ class SimpleRoutineControl : public RoutineControl
     virtual ~SimpleRoutineControl() noexcept = default;
 
   private:
-    std::future<Result<ByteVector>> Start(ByteView input,
-                                          const MetaData& meta_data,
-                                          score::cpp::stop_token /*stop_token*/) final
+    Future<Result<ByteVector>> Start(ByteView input,
+                                     const MetaData& meta_data,
+                                     score::cpp::stop_token /*stop_token*/) final
     {
-        std::promise<Result<ByteVector>> promise;
-        promise.set_value(Start(input, meta_data));
-        return promise.get_future();
+        Promise<Result<ByteVector>> promise;
+        auto future = promise.GetInterruptibleFuture();
+        const auto set_value_result = promise.SetValue(Start(input, meta_data));
+        if (!set_value_result.has_value())
+        {
+            score::cpp::ignore = promise.SetValue(score::MakeUnexpected(NegativeResponseCode::GeneralReject));
+        }
+        if (future.has_value())
+        {
+            return std::move(future.value());
+        }
+        return {};
     }
 
-    std::future<Result<ByteVector>> Stop(ByteView input,
-                                         const MetaData& meta_data,
-                                         score::cpp::stop_token /*stop_token*/) final
+    Future<Result<ByteVector>> Stop(ByteView input,
+                                    const MetaData& meta_data,
+                                    score::cpp::stop_token /*stop_token*/) final
     {
-        std::promise<Result<ByteVector>> promise;
-        promise.set_value(Stop(input, meta_data));
-        return promise.get_future();
+        Promise<Result<ByteVector>> promise;
+        auto future = promise.GetInterruptibleFuture();
+        const auto set_value_result = promise.SetValue(Stop(input, meta_data));
+        if (!set_value_result.has_value())
+        {
+            score::cpp::ignore = promise.SetValue(score::MakeUnexpected(NegativeResponseCode::GeneralReject));
+        }
+        if (future.has_value())
+        {
+            return std::move(future.value());
+        }
+        return {};
     }
 
-    std::future<Result<ByteVector>> RequestResults(ByteView input,
-                                                   const MetaData& meta_data,
-                                                   score::cpp::stop_token /*stop_token*/) final
+    Future<Result<ByteVector>> RequestResults(ByteView input,
+                                              const MetaData& meta_data,
+                                              score::cpp::stop_token /*stop_token*/) final
     {
-        std::promise<Result<ByteVector>> promise;
-        promise.set_value(RequestResults(input, meta_data));
-        return promise.get_future();
+        Promise<Result<ByteVector>> promise;
+        auto future = promise.GetInterruptibleFuture();
+        const auto set_value_result = promise.SetValue(RequestResults(input, meta_data));
+        if (!set_value_result.has_value())
+        {
+            score::cpp::ignore = promise.SetValue(score::MakeUnexpected(NegativeResponseCode::GeneralReject));
+        }
+        if (future.has_value())
+        {
+            return std::move(future.value());
+        }
+        return {};
     }
 };
 

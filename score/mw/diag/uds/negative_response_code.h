@@ -27,7 +27,6 @@ namespace score::mw::diag::uds
 {
 
 /// See ISO 14229-1:2020, Table A.1
-// enum class NegativeResponseCode : std::uint8_t
 enum class NegativeResponseCode : score::result::ErrorCode
 {
     GeneralReject = 0x10,
@@ -92,9 +91,16 @@ enum class NegativeResponseCode : score::result::ErrorCode
     NoProcessingNoResponse = 0xFF,
 };
 
-/// Helper function to create a score::result::Error
+/// Constructs a score::result::Error representing a UDS Negative Response Code.
+/// @param code The UDS NegativeResponseCode enumerator.
+/// @param user_message Optional diagnostic context message.
+/// @return score::result::Error constructed with the NRC error domain and given code.
 score::result::Error MakeError(const NegativeResponseCode code, const std::string_view user_message = "") noexcept;
 
+/// Extracts the UDS NegativeResponseCode from a score::result::ErrorCode if applicable.
+/// @param code The error code to inspect.
+/// @return The corresponding NegativeResponseCode enum value, or std::nullopt if code does not belong to the NRC error
+/// domain.
 [[nodiscard]] std::optional<NegativeResponseCode> ToNegativeResponseCode(const score::result::ErrorCode& code) noexcept;
 
 /// Generic wrapper for an NRC byte constrained to the compile-time range [kMin, kMax].

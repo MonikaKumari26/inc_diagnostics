@@ -37,6 +37,15 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "future",
+    hdrs = ["future.h"],
+    visibility = ["//score:__subpackages__"],
+    deps = [
+        "@score_baselibs//score/concurrency/future",
+    ],
+)
+
 # ---------------------------------------------------------------------------
 # Test aggregation
 # ---------------------------------------------------------------------------

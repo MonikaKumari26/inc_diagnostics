@@ -24,11 +24,11 @@
 
 #include "score/mw/diag/byte_types.h"
 #include "score/mw/diag/diag_result.h"
+#include "score/mw/diag/future.h"
 #include "score/mw/diag/uds/meta_data.h"
+#include "score/mw/diag/uds/negative_response_code.h"
 
 #include <score/stop_token.hpp>
-
-#include <future>
 
 namespace score::mw::diag::uds
 {
@@ -46,10 +46,10 @@ class GenericService
     /// @param input       Raw request payload bytes (service identifier + data).
     /// @param meta_data   Context provided by the diagnostic runtime for this request.
     /// @param stop_token  Token that becomes stopped if the runtime cancels the request.
-    /// @return std::future<Result<ByteVector>> on success, NegativeResponseCode on failure.
-    [[nodiscard]] virtual std::future<Result<ByteVector>> HandleMessage(ByteView input,
-                                                                        const MetaData& meta_data,
-                                                                        score::cpp::stop_token stop_token) = 0;
+    /// @return Future<Result<ByteVector>> on success, NegativeResponseCode on failure.
+    [[nodiscard]] virtual Future<Result<ByteVector>> HandleMessage(ByteView input,
+                                                                   const MetaData& meta_data,
+                                                                   score::cpp::stop_token stop_token) = 0;
 
     virtual ~GenericService() noexcept = default;
 };
@@ -71,13 +71,22 @@ class SimpleGenericService : public GenericService
     virtual ~SimpleGenericService() noexcept = default;
 
   private:
-    std::future<Result<ByteVector>> HandleMessage(ByteView input,
-                                                  const MetaData& meta_data,
-                                                  score::cpp::stop_token /*stop_token*/) final
+    Future<Result<ByteVector>> HandleMessage(ByteView input,
+                                             const MetaData& meta_data,
+                                             score::cpp::stop_token /*stop_token*/) final
     {
-        std::promise<Result<ByteVector>> promise;
-        promise.set_value(HandleMessage(input, meta_data));
-        return promise.get_future();
+        Promise<Result<ByteVector>> promise;
+        auto future = promise.GetInterruptibleFuture();
+        const auto set_value_result = promise.SetValue(HandleMessage(input, meta_data));
+        if (!set_value_result.has_value())
+        {
+            score::cpp::ignore = promise.SetValue(score::MakeUnexpected(NegativeResponseCode::GeneralReject));
+        }
+        if (future.has_value())
+        {
+            return std::move(future.value());
+        }
+        return {};
     }
 };
 
