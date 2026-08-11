@@ -25,7 +25,6 @@
 #include "score/mw/diag/diag_result.h"
 #include "score/mw/diag/future.h"
 #include "score/mw/diag/uds/meta_data.h"
-#include "score/mw/diag/uds/negative_response_code.h"
 
 #include <score/stop_token.hpp>
 
@@ -69,17 +68,11 @@ class SimpleWriteDataByIdentifier : public WriteDataByIdentifier
     Future<Result<void>> Write(ByteView input, const MetaData& meta_data, score::cpp::stop_token /*stop_token*/) final
     {
         Promise<Result<void>> promise;
-        auto future = promise.GetInterruptibleFuture();
-        const auto set_value_result = promise.SetValue(Write(input, meta_data));
-        if (!set_value_result.has_value())
+        if (const auto set_value_result = promise.SetValue(Write(input, meta_data)); !set_value_result.has_value())
         {
-            score::cpp::ignore = promise.SetValue(score::MakeUnexpected(NegativeResponseCode::GeneralReject));
+            score::cpp::ignore = promise.SetError(score::concurrency::MakeError(set_value_result.error()));
         }
-        if (future.has_value())
-        {
-            return std::move(future.value());
-        }
-        return {};
+        return promise.GetInterruptibleFuture().value();
     }
 };
 

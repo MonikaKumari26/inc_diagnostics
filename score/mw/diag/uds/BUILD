@@ -43,7 +43,6 @@ cc_library(
     visibility = ["//score:__subpackages__"],
     deps = [
         ":meta_data",
-        ":negative_response_code",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
         "//score/mw/diag:future",
@@ -57,7 +56,6 @@ cc_library(
     visibility = ["//score:__subpackages__"],
     deps = [
         ":meta_data",
-        ":negative_response_code",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
         "//score/mw/diag:future",
@@ -71,7 +69,6 @@ cc_library(
     visibility = ["//score:__subpackages__"],
     deps = [
         ":meta_data",
-        ":negative_response_code",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
         "//score/mw/diag:future",
@@ -97,7 +94,6 @@ cc_library(
     visibility = ["//score:__subpackages__"],
     deps = [
         ":meta_data",
-        ":negative_response_code",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
         "//score/mw/diag:future",
@@ -149,26 +145,28 @@ cc_library(
 # ---------------------------------------------------------------------------
 
 cc_test(
-    name = "meta_data_test",
-    srcs = ["meta_data_test.cpp"],
+    name = "unit_test",
+    srcs = [
+        "generic_data_identifier_test.cpp",
+        "generic_service_test.cpp",
+        "meta_data_test.cpp",
+        "negative_response_code_test.cpp",
+        "read_data_by_identifier_test.cpp",
+        "routine_control_test.cpp",
+        "write_data_by_identifier_test.cpp",
+    ],
     tags = ["unit"],
     deps = [
+        ":generic_data_identifier",
+        ":generic_service",
         ":meta_data",
         ":negative_response_code",
+        ":read_data_by_identifier",
+        ":routine_control",
+        ":write_data_by_identifier",
         "//score/mw/diag:byte_types",
         "//score/mw/diag:diag_result",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "negative_response_code_test",
-    srcs = ["negative_response_code_test.cpp"],
-    tags = ["unit"],
-    deps = [
-        ":negative_response_code",
-        "//score/mw/diag:byte_types",
-        "//score/mw/diag:diag_result",
+        "//score/mw/diag:future",
         "@googletest//:gtest_main",
     ],
 )
@@ -176,8 +174,7 @@ cc_test(
 test_suite(
     name = "unit_tests",
     tests = [
-        ":meta_data_test",
-        ":negative_response_code_test",
+        ":unit_test",
     ],
     visibility = ["//score/mw/diag:__pkg__"],
 )
