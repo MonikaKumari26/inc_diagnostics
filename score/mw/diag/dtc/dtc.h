@@ -91,7 +91,16 @@ class DTC
     /// @param callback Invoked with the InitReason each time the DTC is (re-)initialised.
     virtual void OnInit(score::cpp::move_only_function<void(InitReason)> callback) = 0;
 
+    /// @brief Virtual destructor to allow safe deletion.
     virtual ~DTC() noexcept = default;
+
+  protected:
+    constexpr DTC() noexcept = default;
+
+    constexpr DTC(DTC&&) noexcept = default;
+    constexpr DTC(const DTC&) noexcept = default;
+    constexpr DTC& operator=(DTC&&) noexcept = default;
+    constexpr DTC& operator=(const DTC&) noexcept = default;
 };
 
 }  // namespace score::mw::diag::dtc
