@@ -122,37 +122,21 @@ class SimpleRoutineControl : public RoutineControl
                                      const MetaData& meta_data,
                                      score::cpp::stop_token /*stop_token*/) final
     {
-        Promise<Result<ByteVector>> promise;
-        if (const auto set_value_result = promise.SetValue(Start(input, meta_data)); !set_value_result.has_value())
-        {
-            score::cpp::ignore = promise.SetError(score::concurrency::MakeError(set_value_result.error()));
-        }
-        return promise.GetInterruptibleFuture().value();
+        return WrapAsFuture(Start(input, meta_data));
     }
 
     Future<Result<ByteVector>> Stop(ByteView input,
                                     const MetaData& meta_data,
                                     score::cpp::stop_token /*stop_token*/) final
     {
-        Promise<Result<ByteVector>> promise;
-        if (const auto set_value_result = promise.SetValue(Stop(input, meta_data)); !set_value_result.has_value())
-        {
-            score::cpp::ignore = promise.SetError(score::concurrency::MakeError(set_value_result.error()));
-        }
-        return promise.GetInterruptibleFuture().value();
+        return WrapAsFuture(Stop(input, meta_data));
     }
 
     Future<Result<ByteVector>> RequestResults(ByteView input,
                                               const MetaData& meta_data,
                                               score::cpp::stop_token /*stop_token*/) final
     {
-        Promise<Result<ByteVector>> promise;
-        if (const auto set_value_result = promise.SetValue(RequestResults(input, meta_data));
-            !set_value_result.has_value())
-        {
-            score::cpp::ignore = promise.SetError(score::concurrency::MakeError(set_value_result.error()));
-        }
-        return promise.GetInterruptibleFuture().value();
+        return WrapAsFuture(RequestResults(input, meta_data));
     }
 };
 

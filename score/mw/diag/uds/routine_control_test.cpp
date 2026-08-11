@@ -22,7 +22,7 @@ namespace score::mw::diag::uds::test
 namespace
 {
 
-class ConcreteSimpleRoutineControl : public SimpleRoutineControl
+class SimpleRoutineControlForTest : public SimpleRoutineControl
 {
   public:
     Result<ByteVector> start_result{ByteVector{std::byte{0x01}}};
@@ -49,7 +49,7 @@ class ConcreteSimpleRoutineControl : public SimpleRoutineControl
 
 TEST(RoutineControlTest, SimpleRoutineControlBridgesResultToFuture)
 {
-    ConcreteSimpleRoutineControl routine;
+    SimpleRoutineControlForTest routine;
     MetaData meta_data{};
     score::cpp::stop_token stop_token{};
     ByteVector payload{std::byte{0xFF}};
@@ -80,7 +80,7 @@ TEST(RoutineControlTest, SimpleRoutineControlBridgesResultToFuture)
 
 TEST(RoutineControlTest, SimpleRoutineControlPropagatesError)
 {
-    ConcreteSimpleRoutineControl routine;
+    SimpleRoutineControlForTest routine;
     routine.start_result = score::MakeUnexpected(NegativeResponseCode::ConditionsNotCorrect);
 
     MetaData meta_data{};

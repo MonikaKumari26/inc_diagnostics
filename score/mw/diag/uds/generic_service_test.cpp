@@ -22,7 +22,7 @@ namespace score::mw::diag::uds::test
 namespace
 {
 
-class ConcreteSimpleGenericService : public SimpleGenericService
+class SimpleGenericServiceForTest : public SimpleGenericService
 {
   public:
     Result<ByteVector> result{ByteVector{std::byte{0xAB}}};
@@ -37,7 +37,7 @@ class ConcreteSimpleGenericService : public SimpleGenericService
 
 TEST(GenericServiceTest, SimpleGenericServiceBridgesResultToFuture)
 {
-    ConcreteSimpleGenericService service;
+    SimpleGenericServiceForTest service;
     MetaData meta_data{};
     score::cpp::stop_token stop_token{};
     ByteVector payload{std::byte{0x31}};
@@ -55,7 +55,7 @@ TEST(GenericServiceTest, SimpleGenericServiceBridgesResultToFuture)
 
 TEST(GenericServiceTest, SimpleGenericServicePropagatesError)
 {
-    ConcreteSimpleGenericService service;
+    SimpleGenericServiceForTest service;
     service.result = score::MakeUnexpected(NegativeResponseCode::ServiceNotSupported);
 
     MetaData meta_data{};

@@ -22,7 +22,7 @@ namespace score::mw::diag::uds::test
 namespace
 {
 
-class ConcreteSimpleWriteDataByIdentifier : public SimpleWriteDataByIdentifier
+class SimpleWriteDataByIdentifierForTest : public SimpleWriteDataByIdentifier
 {
   public:
     Result<void> result{};
@@ -37,7 +37,7 @@ class ConcreteSimpleWriteDataByIdentifier : public SimpleWriteDataByIdentifier
 
 TEST(WriteDataByIdentifierTest, SimpleWriteDataByIdentifierBridgesResultToFuture)
 {
-    ConcreteSimpleWriteDataByIdentifier writer;
+    SimpleWriteDataByIdentifierForTest writer;
     MetaData meta_data{};
     score::cpp::stop_token stop_token{};
     ByteVector payload{std::byte{0x00}};
@@ -53,7 +53,7 @@ TEST(WriteDataByIdentifierTest, SimpleWriteDataByIdentifierBridgesResultToFuture
 
 TEST(WriteDataByIdentifierTest, SimpleWriteDataByIdentifierPropagatesError)
 {
-    ConcreteSimpleWriteDataByIdentifier writer;
+    SimpleWriteDataByIdentifierForTest writer;
     writer.result = score::MakeUnexpected(NegativeResponseCode::SecurityAccessDenied);
 
     MetaData meta_data{};

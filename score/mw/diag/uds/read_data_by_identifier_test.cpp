@@ -22,7 +22,7 @@ namespace score::mw::diag::uds::test
 namespace
 {
 
-class ConcreteSimpleReadDataByIdentifier : public SimpleReadDataByIdentifier
+class SimpleReadDataByIdentifierForTest : public SimpleReadDataByIdentifier
 {
   public:
     Result<ByteVector> result{ByteVector{std::byte{0x12}, std::byte{0x34}}};
@@ -37,7 +37,7 @@ class ConcreteSimpleReadDataByIdentifier : public SimpleReadDataByIdentifier
 
 TEST(ReadDataByIdentifierTest, SimpleReadDataByIdentifierBridgesResultToFuture)
 {
-    ConcreteSimpleReadDataByIdentifier reader;
+    SimpleReadDataByIdentifierForTest reader;
     MetaData meta_data{};
     score::cpp::stop_token stop_token{};
 
@@ -54,7 +54,7 @@ TEST(ReadDataByIdentifierTest, SimpleReadDataByIdentifierBridgesResultToFuture)
 
 TEST(ReadDataByIdentifierTest, SimpleReadDataByIdentifierPropagatesError)
 {
-    ConcreteSimpleReadDataByIdentifier reader;
+    SimpleReadDataByIdentifierForTest reader;
     reader.result = score::MakeUnexpected(NegativeResponseCode::SecurityAccessDenied);
 
     MetaData meta_data{};

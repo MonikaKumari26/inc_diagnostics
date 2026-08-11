@@ -74,13 +74,7 @@ class SimpleGenericService : public GenericService
                                              const MetaData& meta_data,
                                              score::cpp::stop_token /*stop_token*/) final
     {
-        Promise<Result<ByteVector>> promise;
-        if (const auto set_value_result = promise.SetValue(HandleMessage(input, meta_data));
-            !set_value_result.has_value())
-        {
-            score::cpp::ignore = promise.SetError(score::concurrency::MakeError(set_value_result.error()));
-        }
-        return promise.GetInterruptibleFuture().value();
+        return WrapAsFuture(HandleMessage(input, meta_data));
     }
 };
 

@@ -22,7 +22,7 @@ namespace score::mw::diag::uds::test
 namespace
 {
 
-class ConcreteSimpleGenericDataIdentifier : public SimpleGenericDataIdentifier
+class SimpleGenericDataIdentifierForTest : public SimpleGenericDataIdentifier
 {
   public:
     Result<ByteVector> read_result{ByteVector{std::byte{0xDE}, std::byte{0xAD}}};
@@ -43,7 +43,7 @@ class ConcreteSimpleGenericDataIdentifier : public SimpleGenericDataIdentifier
 
 TEST(GenericDataIdentifierTest, SimpleGenericDataIdentifierReadAndWrite)
 {
-    ConcreteSimpleGenericDataIdentifier gdid;
+    SimpleGenericDataIdentifierForTest gdid;
     MetaData meta_data{};
     score::cpp::stop_token stop_token{};
     ByteVector payload{std::byte{0x01}};
