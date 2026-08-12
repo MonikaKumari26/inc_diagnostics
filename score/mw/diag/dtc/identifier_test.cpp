@@ -18,8 +18,8 @@
 
 #include "score/mw/diag/dtc/identifier.h"
 
-#include <score/assert_support.hpp>
 #include <gtest/gtest.h>
+#include <score/assert_support.hpp>
 
 namespace score::mw::diag::dtc
 {

@@ -29,7 +29,7 @@ namespace score::mw::diag::dtc
 /// @brief Debouncing configuration for a DTC instance.
 ///
 /// Holds at most one algorithm — time-based (TimeBased) or counter-based (CounterBased).
-/// Default-constructed means no middleware debouncing: every Report() call is passed through.
+/// Default-constructed means no middleware debouncing: every TriggerAction() call is passed through.
 class Debounce final
 {
   public:
@@ -64,12 +64,12 @@ class Debounce final
     ///        All thresholds, step sizes and jump values are application-specific and must be set explicitly.
     struct CounterBased
     {
-        std::int16_t    failed_threshold;  ///< Counter threshold to qualify as Failed (must be positive).
-        std::int16_t    passed_threshold;  ///< Counter threshold to qualify as Passed (must be negative).
-        std::uint16_t   failed_stepsize;   ///< Counter increment per Failed report.
-        std::uint16_t   passed_stepsize;   ///< Counter decrement per Passed report.
-        std::int16_t    failed_jump_value;  ///< Jump value on first Failed (if use_jump_to_failed).
-        std::int16_t    passed_jump_value;  ///< Jump value on first Passed (if use_jump_to_passed).
+        std::int16_t failed_threshold;   ///< Counter threshold to qualify as Failed (must be positive).
+        std::int16_t passed_threshold;   ///< Counter threshold to qualify as Passed (must be negative).
+        std::uint16_t failed_stepsize;   ///< Counter increment per Failed report.
+        std::uint16_t passed_stepsize;   ///< Counter decrement per Passed report.
+        std::int16_t failed_jump_value;  ///< Jump value on first Failed (if use_jump_to_failed).
+        std::int16_t passed_jump_value;  ///< Jump value on first Passed (if use_jump_to_passed).
         bool use_jump_to_failed;         ///< Apply jump-to-failed on the first Failed report.
         bool use_jump_to_passed;         ///< Apply jump-to-passed on the first Passed report.
 
@@ -77,8 +77,7 @@ class Debounce final
         /// @return true if failed_threshold > 0, passed_threshold < 0, and both step sizes > 0.
         [[nodiscard]] constexpr bool IsValid() const noexcept
         {
-            return (failed_threshold > 0) && (passed_threshold < 0) && (failed_stepsize > 0U) &&
-                   (passed_stepsize > 0U);
+            return (failed_threshold > 0) && (passed_threshold < 0) && (failed_stepsize > 0U) && (passed_stepsize > 0U);
         }
     };
 
@@ -88,28 +87,23 @@ class Debounce final
 
     /// @brief Selects the debouncing algorithm — pass-through (none), time-based, or counter-based.
     ///        None (std::monostate) = pass-through: the middleware applies no algorithm and forwards
-    ///        every Report() call as-is.
+    ///        every TriggerAction() call as-is.
     using Algorithm = std::variant<None, TimeBased, CounterBased>;
 
     /************************************/
     /* Construction                     */
     /************************************/
 
-    /// @brief Default: no debouncing — every Report() call is passed through; IsSet() returns false.
+    /// @brief Default: no debouncing — every TriggerAction() call is passed through; IsSet() returns false.
     constexpr Debounce() noexcept = default;
 
     /// @brief Configure time-based debouncing.
     /// @param timer Time-based algorithm parameters; must satisfy TimeBased::IsValid().
-    constexpr Debounce(TimeBased timer) noexcept : algorithm_{std::in_place_type<TimeBased>, timer}
-    {
-    }
+    constexpr Debounce(TimeBased timer) noexcept : algorithm_{std::in_place_type<TimeBased>, timer} {}
 
     /// @brief Configure counter-based debouncing.
     /// @param counter Counter-based algorithm parameters; must satisfy CounterBased::IsValid().
-    constexpr Debounce(CounterBased counter) noexcept
-        : algorithm_{std::in_place_type<CounterBased>, counter}
-    {
-    }
+    constexpr Debounce(CounterBased counter) noexcept : algorithm_{std::in_place_type<CounterBased>, counter} {}
 
     /************************************/
     /* Queries                          */
@@ -125,7 +119,10 @@ class Debounce final
     /// @brief Returns the configured algorithm variant.
     ///        Inspect with std::holds_alternative<TimeBased> or std::get<TimeBased> / std::get<Counter>.
     /// @return const reference to the Algorithm variant; holds None when IsSet() == false.
-    [[nodiscard]] constexpr const Algorithm& GetAlgorithm() const noexcept { return algorithm_; }
+    [[nodiscard]] constexpr const Algorithm& GetAlgorithm() const noexcept
+    {
+        return algorithm_;
+    }
 
   private:
     Algorithm algorithm_{};

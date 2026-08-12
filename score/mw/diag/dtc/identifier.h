@@ -65,7 +65,8 @@ namespace details
 ///                   ConditionIdentifier distinct, incompatible types at compile time.
 /// @tparam Validator Policy struct providing a constexpr IsValid(std::string_view) predicate.
 ///                   Validated at construction via SCORE_LANGUAGE_FUTURECPP_PRECONDITION.
-template<typename Tag, typename Validator> class Identifier
+template <typename Tag, typename Validator>
+class Identifier
 {
   public:
     /// @brief Construct from a std::string_view or std::string — validated at runtime.
@@ -80,7 +81,10 @@ template<typename Tag, typename Validator> class Identifier
 
     /// @brief Return the underlying string value.
     /// @return The identifier string passed at construction.
-    [[nodiscard]] constexpr std::string_view GetValue() const noexcept { return value_; }
+    [[nodiscard]] constexpr std::string_view GetValue() const noexcept
+    {
+        return value_;
+    }
 
     /// @brief Returns true if both identifiers hold the same string value.
     /// @param other The identifier to compare against.

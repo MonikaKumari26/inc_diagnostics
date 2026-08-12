@@ -17,8 +17,8 @@
 #ifndef SCORE_MW_DIAG_DTC_DTC_H
 #define SCORE_MW_DIAG_DTC_DTC_H
 
-#include "score/mw/diag/diag_result.h"
 #include "score/move_only_function.hpp"
+#include "score/mw/diag/diag_result.h"
 
 #include <cstdint>
 
@@ -53,11 +53,19 @@ enum class InitReason : std::uint8_t
     kStorageReenabled,  ///< DTC storage re-enabled after a storage-condition change.
 };
 
-/// @brief Fault-monitor outcome for a single monitoring cycle.
-enum class Status : std::uint8_t
+/// @brief Debouncing action for a DTC — passed to DTC::TriggerAction().
+enum class Action : std::uint8_t
 {
-    kPassed,  ///< Signal within healthy range.
-    kFailed,  ///< Signal outside healthy range (fault detected).
+    kPassed = 0x00,
+    kFailed = 0x01,
+    kPrepassed = 0x02,
+    kPrefailed = 0x03,
+    kFaultDetectionCounterThresholdReached = 0x04,
+    kResetTestFailed = 0x05,
+    kFreezeDebouncing = 0x06,
+    kResetDebouncing = 0x07,
+    kPrestore = 0x08,
+    kClearPrestore = 0x09,
 };
 
 /// @brief Clearing behaviour for a DTC — passed to DTC::SetClearBehaviour() and Builder::ConfigureClearBehaviour().
@@ -68,14 +76,14 @@ enum class ClearBehaviour : std::uint8_t
     kReenterAfterCleared,  ///< DTC re-enters storage immediately after a tester clear.
 };
 
-/// @brief Abstract interface for reporting fault status on a single DTC.
+/// @brief Abstract interface for triggering fault action on a single DTC.
 class DTC
 {
   public:
-    /// @brief Report the fault status for one monitoring cycle.
-    /// @param status Outcome of the current monitoring cycle (kPassed or kFailed).
-    /// @return Ok on success; Err if the middleware could not process the report.
-    [[nodiscard]] virtual Result<void> Report(Status status) = 0;
+    /// @brief Trigger an action for this DTC.
+    /// @param action The action to trigger (e.g. kPassed, kFailed, kPrepassed, etc.).
+    /// @return Ok on success; Err if the action failed to get processed.
+    [[nodiscard]] virtual Result<void> TriggerAction(Action action) = 0;
 
     /// @brief Set the clearing behaviour for this DTC.
     /// @param behaviour One of ClearBehaviour::kClearable (default), kNotClearable,
@@ -99,8 +107,8 @@ class DTC
 
     constexpr DTC(DTC&&) noexcept = default;
     constexpr DTC(const DTC&) noexcept = default;
-    constexpr DTC& operator=(DTC&&) noexcept = default;
-    constexpr DTC& operator=(const DTC&) noexcept = default;
+    constexpr DTC& operator=(DTC&&) & noexcept = default;
+    constexpr DTC& operator=(const DTC&) & noexcept = default;
 };
 
 }  // namespace score::mw::diag::dtc
