@@ -11,7 +11,24 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
+load("@rules_cc//cc:defs.bzl", "cc_test")
 load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+cc_test(
+    name = "example_cpp",
+    srcs = ["example.cpp"],
+    deps = [
+        "//score/mw/diag/dtc:debounce",
+        "//score/mw/diag/dtc:dtc",
+        "//score/mw/diag/dtc:identifier",
+        "//score/mw/diag/uds:generic_data_identifier",
+        "//score/mw/diag/uds:generic_service",
+        "//score/mw/diag/uds:negative_response_code",
+        "//score/mw/diag/uds:read_data_by_identifier",
+        "//score/mw/diag/uds:routine_control",
+        "//score/mw/diag/uds:write_data_by_identifier",
+    ],
+)
 
 rust_library(
     name = "lib_runtime",
